@@ -14,6 +14,8 @@ if [ -n "${JENKINS_DEBIAN_GLUE_VERSION:-}" ] ; then
   echo "*** Running jenkins-debian-glue version $JENKINS_DEBIAN_GLUE_VERSION ***"
 fi
 
+DIST="aequorea"
+
 checks_and_defaults() {
   if [ -r /etc/jenkins/debian_glue ] ; then
     . /etc/jenkins/debian_glue
