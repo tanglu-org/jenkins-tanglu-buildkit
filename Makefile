@@ -11,8 +11,9 @@ install: $(scripts)
 		install -m 0755 $$prog $(DESTDIR)/$(PREFIX)/bin; \
 	done
 
-	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
-	install -m 0664 examples/* $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
+#	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
+#	install -m 0664 examples/* $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
+	install -m 0664 config/debian_glue $(DESTDIR)/etc/jenkins/
 	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 	install -m 0775 pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 
