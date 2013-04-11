@@ -1,0 +1,31 @@
+#!/bin/bash
+
+checks_and_defaults() {
+  if [ -r /etc/jenkins/debian_glue ] ; then
+    . /etc/jenkins/debian_glue
+  fi
+
+  if [ -z "${OUTGOING_DIR:-}" ] ; then
+    OUTGOING_DIR='/srv/buildd/outgoing'
+  fi
+}
+
+process_uploads() {
+  cd $OUTGOING_DIR
+  for changesfile in *.changes
+  do
+    dput tanglu-ftpmaster $changesfile
+    rc=$?
+    if [[ $rc != 0 ]] ; then
+      mv "$changesfile" "$changesfile.upload-failed"
+    fi
+  done
+}
+
+delete_cruft() {
+  [ "$(ls -A $OUTGOING_DIR)" ] && find $OUTGOING_DIR -mtime +4 -exec rm {} \;
+}
+
+checks_and_defaults
+process_uploads
+delete_cruft

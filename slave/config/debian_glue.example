@@ -5,12 +5,6 @@
 # Expected format: DEADBEEF
 # KEY_ID=
 
-# If TRUNK_RELEASE is set then the package(s) of the repository
-# receiving the packages that are built will be copied to the
-# repository specified in TRUNK_RELEASE. This provides the option
-# to have all recent versions of packages in a central repository.
-# TRUNK_RELEASE='release-trunk'
-
 # If packages are build for more than one architecture you can
 # decide which architecture should build the "Architecture: all"
 # packages. On all other architectures only the arch specific
@@ -27,13 +21,8 @@
 # Default:
 # OUTGOING_DIR='/srv/buildd/outgoing'
 
-# If $release is set then "${REPOSITORY}/release/${release}"
-# is used as release repository. If you want to use a different
-# directory set RELEASE_REPOSITORY accordingly.
+# Use an extra repository only for buildds to fetch packages before
+# they are installed by a dinstall run.
+# This saves a lot of time and makes transitions easier.
 # Default:
-# RELEASE_REPOSITORY="${REPOSITORY}/release/${release}"
-
-# Set the name and email address of this builer.
-# This is a requirement, builds will fail if the variable
-# is not set!
-# DEBEMAIL='!arch Element Builder <element@buildd.example.org>'
+# BUILDD_REPOSITORY="NOT IMPLEMENTED YET"
