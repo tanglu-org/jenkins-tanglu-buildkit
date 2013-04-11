@@ -359,11 +359,10 @@ dist_and_arch_settings
 cowbuilder_init
 cowbuilder_run
 
+submit_build
 
 binaries_to_workspace
 autopkgtest_results
-
-submit_build
 
 bailout 0
 
