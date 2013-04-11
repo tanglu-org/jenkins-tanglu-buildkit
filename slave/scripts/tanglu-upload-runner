@@ -12,6 +12,13 @@ checks_and_defaults() {
 
 process_uploads() {
   cd $OUTGOING_DIR
+
+  count=`ls -1 *.changes 2>/dev/null | wc -l`
+  if [ $count == 0 ]
+  then
+    return 0
+  fi
+
   for changesfile in *.changes
   do
     dput tanglu-ftpmaster $changesfile
@@ -20,6 +27,8 @@ process_uploads() {
       mv "$changesfile" "$changesfile.upload-failed"
     fi
   done
+
+  cd /tmp
 }
 
 delete_cruft() {
