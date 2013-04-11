@@ -8,6 +8,10 @@ checks_and_defaults() {
   if [ -z "${OUTGOING_DIR:-}" ] ; then
     OUTGOING_DIR='/srv/buildd/outgoing'
   fi
+
+  if [ -z "${LOG_DIR:-}" ] ; then
+    LOG_DIR='/srv/buildd/logs'
+  fi
 }
 
 process_uploads() {
@@ -34,6 +38,8 @@ process_uploads() {
 delete_cruft() {
   [ "$(ls -A $OUTGOING_DIR)" ] && find $OUTGOING_DIR -mtime +4 -exec rm {} \;
 }
+
+exec >> "${LOG_DIR}/uploader.log" 2>&1
 
 checks_and_defaults
 process_uploads

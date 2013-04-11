@@ -26,3 +26,7 @@
 # This saves a lot of time and makes transitions easier.
 # Default:
 # BUILDD_REPOSITORY="NOT IMPLEMENTED YET"
+
+# Logfile location
+# Default:
+# LOG_DIR='/srv/buildd/logs'
