@@ -22,6 +22,7 @@ process_uploads() {
   then
     return 0
   fi
+  echo "We have $count package(s) to upload."
 
   for changesfile in *.changes
   do
@@ -36,7 +37,7 @@ process_uploads() {
 }
 
 delete_cruft() {
-  [ "$(ls -A $OUTGOING_DIR)" ] && find $OUTGOING_DIR -mtime +4 -exec rm {} \;
+  [ "$(ls -A $OUTGOING_DIR)" ] && find $OUTGOING_DIR -mtime +2 -exec rm {} \;
 }
 
 exec >> "${LOG_DIR}/uploader.log" 2>&1
