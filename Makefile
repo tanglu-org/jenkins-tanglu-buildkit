@@ -18,9 +18,7 @@ install_client: $(scripts)
 install_master: $(scripts)
 	echo "Nothing to do!"
 
-install:
-	install_master
-	install_client
+install: install_master install_client
 
 uninstall: $(scripts)
 	for prog in $(PROGRAMS); do \
@@ -39,4 +37,4 @@ clean:
 	rm -f debian/jenkins-debian-glue.substvars
 	rm -rf debian/jenkins-debian-glue/
 
-.PHONY: build install
+.PHONY: build install install_master install_client
