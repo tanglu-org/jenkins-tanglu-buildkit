@@ -40,8 +40,8 @@ delete_cruft() {
   [ "$(ls -A $OUTGOING_DIR)" ] && find $OUTGOING_DIR -mtime +2 -exec rm {} \;
 }
 
+checks_and_defaults
 exec >> "${LOG_DIR}/uploader.log" 2>&1
 
-checks_and_defaults
 process_uploads
 delete_cruft
