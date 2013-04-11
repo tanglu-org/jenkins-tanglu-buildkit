@@ -1,0 +1,66 @@
+#!/bin/bash
+# Script to fetch source packages from the Tanglu repositories
+set -e
+
+########
+# Config
+
+REPOSITORY_POOL='http://archive.tanglu.org/tanglu/pool'
+
+########
+
+OPTION_SPEC="help,component:,suite:,pkg:,version:"
+PARSED_OPTIONS=$(getopt -n "$0" -a -o h --l "$OPTION_SPEC" -- "$@")
+
+eval set -- "$PARSED_OPTIONS"
+
+function usage
+{
+  echo "Usage:"
+  echo "tanglu-fetch-source <options> [parameters]"
+}
+
+if [ $? != 0 ] ; then usage ; exit 1 ; fi
+
+while true ; do
+	case "$1" in
+		-h|--help )  usage; exit 0;;
+		--component ) case "$2" in
+			    "") echo "component parameter needs an argument!"; exit 3 ;;
+			     *) export COMPONENT=$2 ; shift 2 ;;
+			   esac ;;
+		--suite ) case "$2" in
+			    "") echo "suite parameter needs an argument!"; exit 3 ;;
+			     *) export SUITE=$2 ; shift 2 ;;
+			   esac ;;
+		--pkg ) case "$2" in
+			    "") echo "Package name needs to be defined!"; exit 3 ;;
+			     *) export PKG_NAME=$2 ; shift 2 ;;
+			     esac ;;
+		--version ) case "$2" in
+			    "") echo "version parameter needs an argument!"; exit 3 ;;
+			     *) export VERSION=$2 ; shift 2 ;;
+			   esac ;;
+
+		--) shift ; break ;;
+		* ) echo "ERROR: unknown flag $1"; exit 2;;
+	esac
+done
+
+if [ -z "${COMPONENT:-}" ] || [ -z "${PKG_NAME:-}" ] || [ -z "${VERSION:-}" ]; then
+  echo "Not all required parameters set!"
+  exit 1
+fi
+
+if [[ $PKG_NAME == lib* ]]
+then
+  SHORT_SEC=${PKG_NAME:0:4}
+else
+  SHORT_SEC=${PKG_NAME:0:1}
+fi
+
+ARCHIVE_DSC_PATH="$REPOSITORY_POOL/$COMPONENT/$SHORT_SEC/$PKG_NAME/$PKG_NAME""_$VERSION.dsc"
+
+echo "*** Fetching package from $COMPONENT: $ARCHIVE_DSC_PATH ***"
+
+dget -duq $ARCHIVE_DSC_PATH
