@@ -25,10 +25,15 @@
 # Location where dput can take the packages and upload them back
 # to the archive.
 # Default:
-# UPLOAD_LOCATION='/srv/buildd/outgoing'
+# OUTGOING_DIR='/srv/buildd/outgoing'
 
 # If $release is set then "${REPOSITORY}/release/${release}"
 # is used as release repository. If you want to use a different
 # directory set RELEASE_REPOSITORY accordingly.
 # Default:
 # RELEASE_REPOSITORY="${REPOSITORY}/release/${release}"
+
+# Set the name and email address of this builer.
+# This is a requirement, builds will fail if the variable
+# is not set!
+# DEBEMAIL='!arch Element Builder <element@buildd.example.org>'

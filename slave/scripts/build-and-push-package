@@ -30,6 +30,11 @@ checks_and_defaults() {
     echo "*** Falling back to default, using host architecture ${architecture}. ***"
   fi
 
+  if [ -z "${DEBEMAIL:-}" ] ; then
+    echo "Error: No email address for this buildd defined! Please check the configuration of this builder!"
+    exit 1
+  fi
+
   if [ -z "${OUTGOING_DIR:-}" ] ; then
     OUTGOING_DIR='/srv/buildd/outgoing'
   fi
@@ -330,7 +335,7 @@ cowbuilder_run() {
 
 # copy results to dput directory
 submit_build() {
-  cp "${WORKSPACE}/binaries/"* "${REPOSITORY}/incoming/${release}/"
+  cp "${WORKSPACE}/binaries/"* "${OUTGOING_DIR}/"
 }
 
 # make them available for the Jenkin's 'Archiving artifacts'

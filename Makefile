@@ -11,7 +11,7 @@ install_client: $(scripts)
 		install -m 0755 $$prog $(DESTDIR)/$(PREFIX)/bin; \
 	done
 
-	install -m 0664 slave/config/debian_glue $(DESTDIR)/etc/jenkins/
+	install -m 0664 slave/config/debian_glue.example $(DESTDIR)/etc/jenkins/
 	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 	install -m 0775 slave/pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 
