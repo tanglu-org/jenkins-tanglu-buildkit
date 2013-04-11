@@ -43,6 +43,10 @@ checks_and_defaults() {
   if [ -z "${PBUILDER_HOOKDIR:-}" ] ; then
     PBUILDER_HOOKDIR='/usr/share/jenkins-debian-glue/pbuilder-hookdir/'
   fi
+
+  if [ -n "${KEY_ID:-}" ] ; then
+    export GPGKEY=$KEY_ID
+  fi
 }
 
 clean_workspace() {
@@ -334,6 +338,14 @@ cowbuilder_run() {
   esac
 }
 
+# sign the resulting packages
+sign_result() {
+  if [ -n "${KEY_ID:-}" ] ; then
+    key_cmd="-k $KEY_ID"
+  fi
+  debsign "${WORKSPACE}/binaries/"*.changes $key_cmd --no-re-sign
+}
+
 # copy results to dput directory
 submit_build() {
   cp "${WORKSPACE}/binaries/"* "${OUTGOING_DIR}/"
@@ -360,6 +372,7 @@ dist_and_arch_settings
 cowbuilder_init
 cowbuilder_run
 
+sign_result
 submit_build
 
 binaries_to_workspace
