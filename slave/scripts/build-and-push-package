@@ -363,7 +363,7 @@ cowbuilder_run
 binaries_to_workspace
 autopkgtest_results
 
-submit_output_to_outgoing
+submit_build
 
 bailout 0
 
