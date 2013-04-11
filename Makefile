@@ -1,21 +1,26 @@
 PREFIX := /usr
 
-PROGRAMS := scripts/* tap/*
+PROGRAMS_SLAVE := slave/scripts/*
 
 build:
 	tests/increase-version-number
 
-install: $(scripts)
+install_client: $(scripts)
 	mkdir -p $(DESTDIR)/$(PREFIX)/bin/
-	for prog in $(PROGRAMS); do \
+	for prog in $(PROGRAMS_SLAVE); do \
 		install -m 0755 $$prog $(DESTDIR)/$(PREFIX)/bin; \
 	done
 
-#	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
-#	install -m 0664 examples/* $(DESTDIR)/usr/share/jenkins-debian-glue/examples/
-	install -m 0664 config/debian_glue $(DESTDIR)/etc/jenkins/
+	install -m 0664 slave/config/debian_glue $(DESTDIR)/etc/jenkins/
 	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
-	install -m 0775 pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
+	install -m 0775 slave/pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
+
+install_master: $(scripts)
+	echo "Nothing to do!"
+
+install:
+	install_master
+	install_client
 
 uninstall: $(scripts)
 	for prog in $(PROGRAMS); do \

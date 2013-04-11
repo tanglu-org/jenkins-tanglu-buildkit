@@ -14,8 +14,6 @@ if [ -n "${JENKINS_DEBIAN_GLUE_VERSION:-}" ] ; then
   echo "*** Running jenkins-debian-glue version $JENKINS_DEBIAN_GLUE_VERSION ***"
 fi
 
-DIST="aequorea"
-
 checks_and_defaults() {
   if [ -r /etc/jenkins/debian_glue ] ; then
     . /etc/jenkins/debian_glue
@@ -32,34 +30,12 @@ checks_and_defaults() {
     echo "*** Falling back to default, using host architecture ${architecture}. ***"
   fi
 
-  if [ -z "${REPOSITORY:-}" ] ; then
-    REPOSITORY='/srv/repository'
+  if [ -z "${OUTGOING_DIR:-}" ] ; then
+    OUTGOING_DIR='/srv/buildd/outgoing'
   fi
 
   if [ -z "${PBUILDER_HOOKDIR:-}" ] ; then
     PBUILDER_HOOKDIR='/usr/share/jenkins-debian-glue/pbuilder-hookdir/'
-  fi
-
-  # Evaluate Freight default options - we use the system wide freight
-  # directories and configuration, unless either $FREIGHT_REPOSITORY or
-  # $FREIGHT_BASE are specified.
-  if [ -z "${FREIGHT_REPOSITORY:-}" ] && [ -z "${FREIGHT_BASE:-}" ] ; then
-    FREIGHT_VARLIB=/var/lib/freight
-    FREIGHT_VARCACHE=/var/cache/freight
-    FREIGHT_CONF=/etc/freight.conf
-  elif [ -z "${FREIGHT_REPOSITORY:-}" ] && [ -n "${FREIGHT_BASE:-}" ] ; then
-    FREIGHT_VARLIB=${FREIGHT_BASE}/default-source
-    FREIGHT_VARCACHE=${FREIGHT_BASE}/default
-    FREIGHT_CONF=${FREIGHT_BASE}/default.conf
-  else
-    # Default to /srv/freight unless specifed
-    if [ -z "${FREIGHT_BASE:-}" ] ; then
-      FREIGHT_BASE=/srv/freight
-    fi
-
-    FREIGHT_VARLIB=${FREIGHT_BASE}/${FREIGHT_REPOSITORY}-source
-    FREIGHT_VARCACHE=${FREIGHT_BASE}/${FREIGHT_REPOSITORY}
-    FREIGHT_CONF=${FREIGHT_BASE}/${FREIGHT_REPOSITORY}.conf
   fi
 }
 
@@ -110,18 +86,9 @@ set_base_path() {
 }
 
 build_info() {
-  if [ -n "${REPOS:-}" ] ; then
-    echo "*** Using supplied repository name $REPOS ***"
-  else
-    REPOS="${JOB_NAME%-binaries*}"
-    REPOS="${REPOS%-repos*}"
-
-    if [ -z "${distribution:-}" ]; then
-      echo "*** No repository supplied, using repository name $REPOS ***"
-    else
-      REPOS="${REPOS}-${distribution}"
-      echo "*** No repository supplied but distribution has been set, using repository name $REPOS ***"
-    fi
+  if [ -z "${distribution:-}" ]; then
+    echo "*** Distribution was not set! ***"
+    exit 4
   fi
 }
 
@@ -321,23 +288,24 @@ cowbuilder_run() {
     bailout 0 "Nothing to do, architecture all binary packages only for non-primary architecture."
   fi
 
+# TODO: We want to add the remote buildd Tanglu repository here!
   # For release builds use release repo to satisfy dependencies
-  if [ -n "${release:-}" ] && [ "$release" != "none" ] && [ "$release" != "trunk" ] && \
-    [ "${release}" != '${release}' ] ; then
-    if [ -n "${RELEASE_REPOSITORY:-}" ]; then
-      local REPOSITORY="${RELEASE_REPOSITORY}"
-    else
-      local REPOSITORY="${REPOSITORY}/release/${release}"
-    fi;
-
-    if [ -d "$REPOSITORY" ]; then
-      BINDMOUNTS="$BINDMOUNTS $REPOSITORY"
-      cat > /tmp/apt-$$/release.list <<EOF
-deb file://${REPOSITORY} ${release} main
-deb-src file://${REPOSITORY} ${release} main
-EOF
-    fi
-  fi
+#  if [ -n "${release:-}" ] && [ "$release" != "none" ] && [ "$release" != "trunk" ] && \
+#    [ "${release}" != '${release}' ] ; then
+#    if [ -n "${RELEASE_REPOSITORY:-}" ]; then
+#      local REPOSITORY="${RELEASE_REPOSITORY}"
+#    else
+#      local REPOSITORY="${REPOSITORY}/release/${release}"
+#    fi;
+#
+#    if [ -d "$REPOSITORY" ]; then
+#      BINDMOUNTS="$BINDMOUNTS $REPOSITORY"
+#      cat > /tmp/apt-$$/release.list <<EOF
+#deb file://${REPOSITORY} ${release} main
+#deb-src file://${REPOSITORY} ${release} main
+#EOF
+#    fi
+#  fi
 
   case "$architecture" in
     i386)
@@ -360,210 +328,9 @@ EOF
   esac
 }
 
-remove_packages() {
-  if [ -n "${SKIP_REMOVAL:-}" ] ; then
-    echo "*** Skipping removal of existing packages as requested via SKIP_REMOVAL ***"
-    return 0
-  fi
-
-  echo "*** Removing source package version from repository ***"
-  ${SUDO_CMD:-} reprepro -v -A source -b "${REPOSITORY}" --waitforlock 1000 remove "${REPOS}" "${SOURCE_PACKAGE}"
-
-  echo "*** Removing previous binary package versions from repository ***"
-  for p in $(dcmd "${WORKSPACE}/binaries/"*"${newest_version}_${arch}.changes" | grep '\.deb$') ; do
-    file="$(basename $p)"
-    binpackage="${file%%_*}"
-    binary_list="${binary_list:-} ${binpackage}"
-
-    # note: "removesrc" would remove foreign arch files (of different builds)
-    if echo "$file" | egrep -q '_all.deb$'; then
-      echo "*** Removing existing package ${binpackage} from repository ${REPOS} (arch all) ***"
-      ${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 remove "${REPOS}" "${binpackage}"
-    else
-      echo "*** Removing existing package ${binpackage} from repository ${REPOS} for arch ${arch} ***"
-      ${SUDO_CMD:-} reprepro -v -A "${arch}" -b "${REPOSITORY}" --waitforlock 1000 remove "${REPOS}" "${binpackage}"
-    fi
-
-  done
-
-}
-
-remove_missing_binary_packages() {
-  if [ -n "${SKIP_REMOVAL:-}" ] ; then
-    echo "*** Skipping removal of existing packages as requested via SKIP_REMOVAL ***"
-    return 0
-  fi
-
-  echo "*** Checking for missing binary packages to be considered for removal ***"
-
-  # In a binary-only build we don't get any arch-all (*_all.deb) packages and
-  # therefore they won't be listed in the changes file.  As a result they would
-  # be reported as missing from the build and to be considered for removal.
-  # As we don't want to remove the arch-all package e.g. from the amd64 repos
-  # in the i386 run we've to skip the removal procedure then.
-  case "${DEBBUILDOPTS:-}" in
-    *-B*)
-      echo "*** Skipping removal of missing binaries as being a binary-only build ***"
-      return 0
-      ;;
-  esac
-
-  for p in $(${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 --list-format '${package}\n' listmatched "${REPOS}" '*' | sort -u); do
-    echo " $binary_list " | grep -q " $p " || missing_packages="${missing_packages:-} $p"
-  done
-
-  if echo "${missing_packages:-}" | grep -q '.' ; then
-    echo "*** Binary package(s) found, missing in build version: ${missing_packages:-} ***"
-
-    for p in $missing_packages ; do
-      echo "*** Removing $p from $REPOS to avoid out-of-date data ***"
-      ${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 remove "${REPOS}" "${p}"
-    done
-  fi
-}
-
-reprepro_wrapper() {
-  if ! [ -d "$REPOSITORY" ] ; then
-    bailout 1 "Error: repository ${REPOSITORY} does not exist."
-  fi
-
-  ${SUDO_CMD:-} generate-reprepro-codename "${REPOS}"
-
-  remove_packages
-  remove_missing_binary_packages
-
-  archall=false
-  case $architecture in
-    all) archall=true
-      architecture='*' # support as file expansion in reprepro cmdline
-      ;;
-  esac
-
-  echo "*** Including packages in repository $REPOS ***"
-  ${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 \
-    --ignore=wrongdistribution --ignore=uploaders \
-    include "${REPOS}" "${WORKSPACE}/binaries/"*"${newest_version}"_${architecture}.changes
-  [ $? -eq 0 ] || bailout 1 "Error: Failed to include binary package in $REPOS repository."
-}
-
-freight_ensure_repo() {
-  echo "*** Creating freight directory structure ***"
-  mkdir -p ${FREIGHT_VARCACHE} ${FREIGHT_VARLIB}
-
-  if [ ! -f $FREIGHT_CONF ] ; then
-    echo "*** Creating freight repository configuration in $FREIGHT_CONF ***"
-
-    cat > ${FREIGHT_CONF} <<EOF
-# Gernated by Debian-Jenkins-Glue
-#
-# Directories for the Freight library and Freight cache.  Your web
-# server's document root should point to VARCACHE.
-VARLIB="${FREIGHT_VARLIB}"
-VARCACHE="${FREIGHT_VARCACHE}"
-
-# Default 'Origin' and 'Label' fields for 'Release' files.
-ORIGIN="Freight"
-LABEL="Freight"
-# From Debian-Jenkins-Glue KEY_ID
-GPG="${KEY_ID}"
-EOF
-  fi
-
-  [ -f $FREIGHT_CONF ] || bailout 1 "Error: Failed to create freight configuration in $FREIGHT_CONF"
-}
-
-freight_wrapper() {
-  freight_ensure_repo
-
-  echo "*** Including packages via freight in repository ${FREIGHT_VARLIB}/${REPOS} ***"
-  ${SUDO_CMD:-} freight add -v -c $FREIGHT_CONF "${WORKSPACE}/binaries/"*"${newest_version}"*"deb" apt/${REPOS}
-  [ $? -eq 0 ] || bailout 1 "Error: Failed to add binary package to repository."
-
-  echo "*** Generating freight cache ***"
-  ${SUDO_CMD:-} freight cache -v -c $FREIGHT_CONF
-  [ $? -eq 0 ] || bailout 1 "Error: Failed to generate freight cache for ${FREIGHT_VARCACHE}."
-}
-
-trunk_release() {
-  # setting TRUNK_RELEASE=true enables release-trunk repository,
-  # to always get a copy of the package(s) to a central place
-  if [ -z "${TRUNK_RELEASE:-}" ] ; then
-    echo "*** TRUNK_RELEASE is not enabled ***"
-  elif [ "${IGNORE_RELEASE_TRUNK:-}" = "true" ] ; then
-    echo "*** IGNORE_RELEASE_TRUNK is set, ignoring request to add package(s) to $TRUNK_RELEASE repos ***"
-  else
-    echo "*** TRUNK_RELEASE is enabled ($TRUNK_RELEASE) ***"
-
-    ${SUDO_CMD:-} generate-reprepro-codename "$TRUNK_RELEASE"
-
-    ${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 --ignore=wrongdistribution copymatched "$TRUNK_RELEASE" "$REPOS" '*'
-    [ $? -eq 0 ] || bailout 1 "Error: Failed to copy packages from ${REPOS} to ${TRUNK_RELEASE}."
-  fi
-}
-
-release_repos() {
-  echo "*** Environment variable 'release' is set, running through release steps. ***"
-
-  if [ -n "${RELEASE_REPOSITORY:-}" ]; then
-    local REPOSITORY="${RELEASE_REPOSITORY}"
-  else
-    local REPOSITORY="${REPOSITORY}/release/${release}"
-  fi;
-
-  mkdir -p "${REPOSITORY}/incoming/${release}"
-  mkdir -p "${REPOSITORY}/conf"
-
+# copy results to dput directory
+submit_build() {
   cp "${WORKSPACE}/binaries/"* "${REPOSITORY}/incoming/${release}/"
-  [ $? -eq 0 ] || bailout 1 "Error: Failed to copy binary packages to release directory."
-
-  REPOSITORY=$REPOSITORY generate-reprepro-codename "${release}"
-
-  if ! grep -q "^Name: $release$" "${REPOSITORY}/conf/incoming" 2>/dev/null ; then
-    cat >> "${REPOSITORY}/conf/incoming" << EOF
-
-Name: $release
-IncomingDir: incoming/$release
-TempDir: tmp
-LogDir: log
-MorgueDir: ${REPOSITORY}/morgue
-Default: $release
-Cleanup: unused_files on_deny on_error
-
-EOF
-  fi
-
-  local old_dir=$(pwd)
-  cd "${REPOSITORY}/incoming/${release}"
-  ${SUDO_CMD:-} reprepro -v -b "${REPOSITORY}" --waitforlock 1000 --ignore=wrongdistribution \
-                processincoming "${release}" "$(basename ${WORKSPACE}/binaries/*.changes)"
-  local RC=$?
-  cd "$old_dir"
-
-  if [ $RC -ne 0 ] ; then
-    bailout 1 "Error: Failed to execute processincoming for release ${release}."
-  fi
-}
-
-deploy_to_releases() {
-  if [ -n "${USE_FREIGHT:-}" ] ; then
-    freight_wrapper
-    # Freight is currently not able to manage release or trunk release repos,
-    # so this is the stage where we exit in that case.
-    return 0
-  fi
-
-  if [ -n "${release:-}" ] && [ "$release" != "none" ] && [ "$release" != "trunk" ] && \
-    # '${release}' is a hidden bomb: when provided through predefined parameters
-    # from an upstream jenkins job (like foo-binaries receiving the parameters
-    # from foo-source) but the job (foo-binaries) gets triggered manually (without
-    # setting the predefined parameters therefore) then ${release} is set to
-    # '${release}' instead of being empty
-    [ "${release}" != '${release}' ] ; then
-    release_repos
-  else
-    reprepro_wrapper
-    trunk_release
-  fi
 }
 
 # make them available for the Jenkin's 'Archiving artifacts'
@@ -584,23 +351,14 @@ build_info
 identify_sourcefile
 dist_and_arch_settings
 
-# do not run in repos job?
-if [ -n "${PROVIDE_ONLY:-}" ] ; then
-  echo "*** Config variable 'PROVIDE_ONLY' is set, ignoring request to run cowbuilder. ***"
-else
-  cowbuilder_init
-  cowbuilder_run
-fi
+cowbuilder_init
+cowbuilder_run
 
-# do not run in binaries job?
-if [ -n "${BUILD_ONLY:-}" ] ; then
-  echo "*** Config variable 'BUILD_ONLY' is set, ignoring request to use local repository. ***"
-else
-  deploy_to_releases
-fi
 
 binaries_to_workspace
 autopkgtest_results
+
+submit_output_to_outgoing
 
 bailout 0
 
