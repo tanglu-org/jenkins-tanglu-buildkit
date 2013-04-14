@@ -26,26 +26,27 @@ class JenkinsBridge:
         parser = SafeConfigParser()
         parser.read('jenkins-dak.conf')
         url = parser.get('Jenkins', 'url')
-        keyfile = parser.get('Jenkins', 'private_key')
+        if parser.has_option('Jenkins', 'private_key'):
+            keyfile = parser.get('Jenkins', 'private_key')
         
         self.jenkins_cmd = ["jenkins-cli", "-s", url]
-        code, outputLines = runJenkinsCommand(["who-am-i"], False)
-        if (code != 0) or (outputLines[0] != "Authenticated as: dak"):
+        code, outputLines = self.runSimpleJenkinsCommand(["who-am-i"], False)
+        if (code != 0) or (not outputLines.startswith("Authenticated as: dak")):
             raise Exception("Unable to authenticate against Jenkins!\nOutput: %s" % (outputLines))
         
         self.currentJobs = []
-        lines = runJenkinsCommand(["list-jobs"])
+        lines = self.runSimpleJenkinsCommand(["list-jobs"])
         for jobName in lines:
             if jobName.startswith("pkg+"):
                 self.currentJobs += [jobName]
         
         
-    def runJenkinsCommand(self, options, failOnError=True):
-        p = subprocess.Popen( self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    def runSimpleJenkinsCommand(self, options, failOnError=True):
+        p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         resLines = ""
-        while (True):
-          retcode = p.poll ()
-          line = p.stdout.readline ()
+        while(True):
+          retcode = p.poll()
+          line = p.stdout.readline()
           resLines += line
           if (retcode is not None):
               break
@@ -75,7 +76,11 @@ class JenkinsBridge:
             print("TODO: Update job")
         else:
             jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, architecture)
-            runJenkinsCommand(["create-job", jobName, jobXML])
+            p = Popen(self.jenkins_cmd + ["create-job", jobName], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+            output = p.communicate(input=jobXML)
+            if p.returncode is not 0:
+                raise Exception(output)
+            
             self.currentJobs += [jobName]
             print("*** Successfully created new job: %s ***" % (jobName))
 

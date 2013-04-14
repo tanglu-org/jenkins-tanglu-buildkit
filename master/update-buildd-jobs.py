@@ -18,9 +18,11 @@
 
 import os
 import sys
-import jenkins
+from jenkins import *
 
 if __name__ == "__main__":
     os.environ['LANG'] = 'C'
     os.environ['LC_ALL'] = 'C'
-    main()
+    test = JenkinsBridge()
+    test.createUpdateJob("blah", "1.0", "fantasy", "mordor", "amd64")
+#    main()
