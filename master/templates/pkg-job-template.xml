@@ -38,3 +38,4 @@ build-and-push-package
       <template>{{pkgversion}}#${BUILD_NUMBER}</template>
     </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
   </buildWrappers>
+</project>
