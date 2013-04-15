@@ -76,7 +76,7 @@ class PackageInfoRetriever():
             pkgname = section['Package']
             pkg = PackageInfo(pkgname, pkgversion, dist, component, archs)
 
-            pkg.info = ("Package: %s\nBuilds Binaries: %s\nMaintainer: %s\nCo-Maintainers: %s\nVCS-Browser: %s" %
+            pkg.info = ("Package: %s\nBinary Packages: %s\nMaintainer: %s\nCo-Maintainers: %s\nVCS-Browser: %s" %
                         (pkgname, binaries, section['Maintainer'], section.get('Uploaders', 'Nobody'), section.get('Vcs-Browser', 'None set')))
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture
