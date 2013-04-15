@@ -105,7 +105,6 @@ class JenkinsBridge:
             print("Failed to parse json")
             sys.exit(3)
 
-        print(buildStatusJson)
         if buildStatusJson.has_key("fullDisplayName"):
             displayName = buildStatusJson["fullDisplayName"]
             parts = displayName.split (" ", 1)
