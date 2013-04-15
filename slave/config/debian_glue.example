@@ -1,6 +1,9 @@
 # Example configuration file for the jenkins-debian-glue software.
 # Install this file as /etc/jenkins/debian_glue to enable it.
 
+# Set email address of this builder
+#DEBEMAIL='%arch% Element Buildd <arch-element@buildd.example.org>'
+
 # Set GnuPG ID that should be used for signing the reprepro repository.
 # Expected format: DEADBEEF
 # KEY_ID=
