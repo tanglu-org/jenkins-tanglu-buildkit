@@ -70,12 +70,13 @@ class JenkinsBridge:
 
         return p.returncode, resLines
 
-    def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture):
+    def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
         jobStr = self._jobTemplateStr.replace("{{architecture}}", architecture)
         jobStr = jobStr.replace("{{distroname}}", distro)
         jobStr = jobStr.replace("{{component}}", component)
         jobStr = jobStr.replace("{{pkgname}}", pkgname)
         jobStr = jobStr.replace("{{pkgversion}}", pkgversion)
+        jobStr = jobStr.replace("{{info}}", info)
 
         return jobStr
 
@@ -119,7 +120,7 @@ class JenkinsBridge:
             else:
                 return True, buildVersion
 
-    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
+    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", scheduleBuild=True):
         # get name of the job
         jobName = self._getJobName(pkgname, distro, component, architecture)
         buildArch = architecture
@@ -127,7 +128,7 @@ class JenkinsBridge:
             # we build all arch:all packages on amd64
             buildArch = "amd64"
 
-        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch)
+        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
         if jobName in self.currentJobs.keys():
             compare = version_compare(self.currentJobs[jobName], pkgversion)

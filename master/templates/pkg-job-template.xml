@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>This job was generated automatically by the Archive Kit! Do not edit it manually!</description>
+  <description>{{info}}
+This job was generated automatically by the Archive Kit! Do not edit it manually!</description>
   <logRotator class="hudson.tasks.LogRotator">
     <daysToKeep>12</daysToKeep>
     <numToKeep>2</numToKeep>
@@ -28,7 +29,7 @@ build-and-push-package
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,lintian.txt</artifacts>
+      <artifacts>*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes</artifacts>
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>

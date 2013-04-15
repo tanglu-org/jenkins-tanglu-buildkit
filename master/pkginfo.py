@@ -28,6 +28,7 @@ class PackageInfo():
         self.dist = dist
         self.component = component
         self.archs = archs
+        self.info = ""
         self._installedArchs = []
 
     def __str__(self):
@@ -65,7 +66,11 @@ class PackageInfoRetriever():
             archs = section['Architecture']
             binaries = section['Binary']
             pkgversion = section['Version']
-            pkg = PackageInfo(section['Package'], pkgversion, dist, component, archs)
+            pkgname = section['Package']
+            pkg = PackageInfo(pkgname, pkgversion, dist, component, archs)
+
+            pkg.info = "Package: %s\nBuilds Binaries: %s\nMaintainer: %s\Co-Maintainers: %s\nVCS-Browser: %s" %
+                (pkgname, binaries, section['Maintainer'], section.get('Uploaders', 'Nobody'), section.get('Vcs-Browser', 'None set'))
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture
             # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
