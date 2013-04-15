@@ -5,8 +5,9 @@ PROGRAMS_SLAVE := slave/scripts/*
 build:
 	tests/increase-version-number
 
-install_client: $(scripts)
+install_slave: $(scripts)
 	mkdir -p $(DESTDIR)/$(PREFIX)/bin/
+	mkdir -p $(DESTDIR)/etc/jenkins/
 	for prog in $(PROGRAMS_SLAVE); do \
 		install -m 0755 $$prog $(DESTDIR)/$(PREFIX)/bin; \
 	done
@@ -18,7 +19,7 @@ install_client: $(scripts)
 install_master: $(scripts)
 	echo "Nothing to do!"
 
-install: install_master install_client
+install: install_master install_slave
 
 uninstall: $(scripts)
 	for prog in $(PROGRAMS); do \
