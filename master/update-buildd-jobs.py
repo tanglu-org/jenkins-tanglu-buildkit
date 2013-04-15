@@ -18,11 +18,13 @@
 
 import os
 import sys
+import apt_pkg
 from jenkins import *
 
 if __name__ == "__main__":
     os.environ['LANG'] = 'C'
     os.environ['LC_ALL'] = 'C'
+    apt_pkg.init()
     test = JenkinsBridge()
     test.createUpdateJob("blah", "1.0", "fantasy", "mordor", "amd64")
 #    main()

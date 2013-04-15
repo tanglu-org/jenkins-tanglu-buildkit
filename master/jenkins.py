@@ -20,7 +20,7 @@ import os
 import sys
 import subprocess
 from ConfigParser import SafeConfigParser
-import apt_pkg
+from apt_pkg import version_compare
 
 class JenkinsBridge:
     def __init__(self):
@@ -82,7 +82,7 @@ class JenkinsBridge:
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, architecture)
 
         if jobName in self.currentJobs.keys():
-            compare = apt_pkg.version_compare(self.currentJobs[jobName], pkgversion)
+            compare = version_compare(self.currentJobs[jobName], pkgversion)
             if compare >= 0:
                 # the version already registered for build is higher or equal to the new one - we skip this package
                 return
