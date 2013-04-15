@@ -19,12 +19,23 @@
 import os
 import sys
 import apt_pkg
-from jenkins import *
+from ConfigParser import SafeConfigParser
+
+from jenkinsctl import *
+from dak_pkginfo import *
 
 if __name__ == "__main__":
     os.environ['LANG'] = 'C'
     os.environ['LC_ALL'] = 'C'
+    # find path to dak and add it to Python-path
+    parser = SafeConfigParser()
+    parser.read('jenkins-dak.conf')
+    dak_path = parser.get('DAK', 'path')
+    sys.path.append(dak_path)
+    # init Apt, we need it later
     apt_pkg.init()
+
+    # Test
     test = JenkinsBridge()
     test.createUpdateJob("blah", "1.0", "fantasy", "mordor", "amd64")
 #    main()

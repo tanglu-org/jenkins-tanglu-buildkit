@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import subprocess
 from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
@@ -32,18 +31,18 @@ class JenkinsBridge:
 
         # check if we have a usable connection to Jenkins (authenticated as dak)
         self.jenkins_cmd = ["jenkins-cli", "-s", url]
-        code, outputLines = self.runSimpleJenkinsCommand(["who-am-i"], False)
+        code, outputLines = self._runSimpleJenkinsCommand(["who-am-i"], False)
         if (code != 0) or (not outputLines.startswith("Authenticated as: dak")):
             raise Exception("Unable to authenticate against Jenkins!\nOutput: %s" % (outputLines))
-        
+
         # load our job template now, so we can access it faster
         self._jobTemplateStr = open('templates/pkg-job-template.xml', 'r').read()
 
         # fetch all currently registered jobs and their versions (by using a small Groovy script - hackish, but it works)
-        scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-jobversions.groovy" 
-        lines = self.runSimpleJenkinsCommand(["groovy", scriptPath])
+        scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-jobversions.groovy"
+        lines = self._runSimpleJenkinsCommand(["groovy", scriptPath])
         rawPkgJobLines = lines.splitlines ()
-        
+
         self.currentJobs = {}
         for jobln in rawPkgJobLines:
            pkgjob_parts = jobln.strip ().split (" ", 1)
@@ -51,7 +50,7 @@ class JenkinsBridge:
                # map package-job name to version
                self.currentJobs[pkgjob_parts[0].strip ()] = pkgjob_parts[1].strip ()
 
-    def runSimpleJenkinsCommand(self, options, failOnError=True):
+    def _runSimpleJenkinsCommand(self, options, failOnError=True):
         p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         resLines = ""
         while(True):
@@ -78,7 +77,7 @@ class JenkinsBridge:
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
         # generate generic job name
-        jobName = "pkg+%s_%s" % (pkgname, architecture)
+        jobName = "pkg+%s~%s_%s" % (pkgname, distro, architecture)
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, architecture)
 
         if jobName in self.currentJobs.keys():
@@ -86,7 +85,7 @@ class JenkinsBridge:
             if compare >= 0:
                 # the version already registered for build is higher or equal to the new one - we skip this package
                 return
-                
+
             p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
             output = p.communicate(input=jobXML)
             if p.returncode is not 0:
