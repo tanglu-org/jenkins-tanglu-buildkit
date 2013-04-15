@@ -41,13 +41,13 @@ class BuildJobUpdater:
             if pkg.archs == "all":
                  # our package is arch:all, schedule it on amd64 for build
                  self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info, False)
-                 if not "all" in pkg.installedArchs:
+                 if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
-                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch)
+                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all")
                  continue
 
             for arch in self._supportedArchs:
-                if ("any" in pkg.archs) or ("linux-any" in pkg.archs) or (arch in pkg.archs):
+                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
                     self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info, False)
                     if not arch in pkg.installedArchs:

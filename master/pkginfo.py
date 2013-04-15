@@ -73,7 +73,7 @@ class PackageInfoRetriever():
                 binaryName = binaries
             for arch in self._supportedArchs:
                 fileExt = "deb"
-                if "udeb" in binaryName:
+                if "-udeb" in binaryName:
                     fileExt = "udeb"
                 binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkgversion, arch, fileExt)
                 expectedPackagePath = self._archivePath + "/%s/%s" % (section["Directory"], binaryPkgName)
