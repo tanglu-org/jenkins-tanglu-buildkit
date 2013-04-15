@@ -34,6 +34,10 @@ class BuildJobUpdater:
         parser.read('jenkins-dak.conf')
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
 
+    @property
+    def scheduleBuilds(self):
+        return self._scheduleBuilds
+
     @scheduleBuilds.setter
     def scheduleBuilds(self, value):
         self._scheduleBuilds = value
@@ -47,7 +51,7 @@ class BuildJobUpdater:
                  self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", False)
                  if not "all" in pkg.installedArchs:
                      if self._scheduleBuilds:
-                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.dist, arch)
+                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.dist, arch)
                  continue
 
             for arch in self._supportedArchs:
@@ -57,7 +61,7 @@ class BuildJobUpdater:
                     if not arch in pkg.installedArchs:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
                         if self._scheduleBuilds:
-                            self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.dist, arch)
+                            self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.dist, arch)
 
 def main():
     # init Apt, we need it later
@@ -67,18 +71,16 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
-    parser.add_option(None, "--nobuild",
+    parser.add_option("--nobuild",
                   action="store_true", dest="no_build", default=False,
                   help="don't schedule any builds")
 
     (options, args) = parser.parse_args()
 
     if options.update:
-        #sync = BuildJobUpdater()
-        #sync.scheduleBuilds = not options.no_build
-        #sync.syncPackages()
-        jenkins = JenkinsBridge ()
-        jenkins._getLastBuildStatus("pkg+appstream~aequorea_i386")
+        sync = BuildJobUpdater()
+        sync.scheduleBuilds = not options.no_build
+        sync.syncPackages()
     else:
         print("Run with -h for a list of available command-line options!")
 

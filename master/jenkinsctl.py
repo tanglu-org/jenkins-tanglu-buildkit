@@ -95,8 +95,22 @@ class JenkinsBridge:
         except:
             print("Failed to parse json")
             sys.exit(3)
-        if buildStatusJson.has_key( "result" ):
-            print("[" + jobName + "] build status: " + buildStatusJson["result"])
+
+        print(buildStatusJson)
+        if buildStatusJson.has_key("fullDisplayName"):
+            displayName = buildStatusJson["fullDisplayName"]
+            parts = displayName.split (" ", 1)
+            buildVersion = parts[1].strip()
+        else:
+            return False, "0"
+
+        if buildStatusJson.has_key("building"):
+            return True, buildVersion
+        if buildStatusJson.has_key("result"):
+            if (buildStatusJson["result"] != "SUCCESS"):
+                return False, buildVersion
+            else:
+                return True, buildVersion
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
         # get name of the job
@@ -135,6 +149,14 @@ class JenkinsBridge:
             if scheduleBuild:
                 self._runSimpleJenkinsCommand(["build", jobName])
 
-     def scheduleBuildIfNotFailed(self, pkgname, distro, architecture):
-         jobName = self._getJobName(pkgname, distro, architecture)
-         self._runSimpleJenkinsCommand(["build", jobName])
+    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, distro, architecture):
+        jobName = self._getJobName(pkgname, distro, architecture)
+        success, buildVersion = self._getLastBuildStatus(jobName)
+
+        # get the last version of the package which has been built (buildVersion without parts after the '#')
+        lastVersionBuilt = buildVersion[:buildVersion.index('#')]
+        compare = version_compare(lastVersionBuilt, pkgversion)
+        if (compare < 0):
+            self._runSimpleJenkinsCommand(["build", jobName])
+        # since lastBuildStatus returns success for builds in progress and returns the correct build number,
+        # we are done here - if versions are equal, the last build was either successful or has failed.
