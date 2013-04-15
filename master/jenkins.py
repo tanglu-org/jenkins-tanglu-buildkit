@@ -20,7 +20,7 @@ import os
 import sys
 import subprocess
 from ConfigParser import SafeConfigParser
-from apt_pkg import version_compare
+import apt_pkg
 
 class JenkinsBridge:
     def __init__(self):
@@ -102,7 +102,7 @@ class JenkinsBridge:
             if p.returncode is not 0:
                 raise Exception("Failed adding %s:\n%s" % (jobName, output))
 
-            self.currentJobs += [jobName]
+            self.currentJobs[jobName] = pkgversion
             print("*** Successfully created new job: %s ***" % (jobName))
             # shedule build of the new package
             if scheduleBuild:
