@@ -90,6 +90,10 @@ class JenkinsBridge:
         try:
             jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/lastBuild/api/json" % (jobName))
         except urllib2.HTTPError, e:
+            if e.code == 404:
+                # maybe the package has never been built?
+                # return a fake build-id, so a build gets scheduled
+                return False, "0"
             print("URL Error: " + str(e.code))
             print("(job name [" + jobName + "] probably wrong)")
             sys.exit(2)
