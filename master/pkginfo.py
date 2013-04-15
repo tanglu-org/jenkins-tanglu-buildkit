@@ -23,11 +23,15 @@ from apt_pkg import TagFile, TagSection
 
 class PackageInfo():
     def __init__(self, pkgname, pkgversion, dist, component, archs):
-        self._pkgname = pkgname
-        self._version = pkgversion
-        self._dist = dist
-        self._component = component
-        self._archs = archs
+        self.pkgname = pkgname
+        self.version = pkgversion
+        self.dist = dist
+        self.component = component
+        self.archs = archs
+        self._installedArchs = ""
+
+    def __str__(self):
+        return "PackageInfo_Obj: name: %s | version: %s | dist: %s | comp.: %s | archs: %s" % (self.pkgname, self.version, self.dist, self.component, self.archs)
 
     @property
     def installedArchs(self):
@@ -43,17 +47,19 @@ class PackageInfoRetriever():
         parser.read('jenkins-dak.conf')
         path = parser.get('Archive', 'path')
         self._archivePath = path
+        self._archiveComponents = parser.get('Archive', 'components').split (" ")
+        self._archiveDists = parser.get('Archive', 'dists').split (" ")
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs += ["all"]
 
     def _getPackagesFor(self, dist, component):
-        source_path = self._archivePath + "dists/%s/%s/source/Sources.gz" % (dist, component)
+        source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
         tagf = TagFile (f)
         packageList = []
         for section in tagf:
             # don't even try to build source-only packages
-            if section['Extra-Source-Only'] == 'yes':
+            if section.get('Extra-Source-Only', 'no') == 'yes':
                 pass
 
             archs = section['Architecture']
@@ -62,20 +68,27 @@ class PackageInfoRetriever():
             pkg = PackageInfo(section['Package'], pkgversion, dist, component, archs)
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture
-            if binaries.index(',') > 0:
+            # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
+            # (at time, a version-check prevents packages from being built twice)
+            if "," in binaries:
                 binaryName = binaries[:binaries.index(',')]
             else:
                 binaryName = binaries
             for arch in self._supportedArchs:
                 fileExt = "deb"
-                if binaryName.index('udeb') > 0:
+                if "udeb" in binaryName:
                     fileExt = "udeb"
                 binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkgversion, arch, fileExt)
                 expectedPackagePath = self._archivePath + "/%s/%s" % (section["Directory"], binaryPkgName)
 
                 if os.path.isfile(expectedPackagePath):
                     pkg.installedArchs += arch
-                else:
-                    print("INFO: Binary package %s not found in the archive." % (expectedPackagePath))
+                    break
+            packageList += [pkg]
 
-           # print pkg
+        return packageList
+
+    def getAllPackages():
+        return 0
+
+
