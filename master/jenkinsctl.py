@@ -72,7 +72,7 @@ class JenkinsBridge:
         return p.returncode, resLines
 
     def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
-        info_html = info.replace("\n", "<br/>").replace("<", "&lt;").replace(">", "&gt;")
+        info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
         jobStr = self._jobTemplateStr.replace("{{architecture}}", architecture)
         jobStr = jobStr.replace("{{distroname}}", escape(distro))
         jobStr = jobStr.replace("{{component}}", component)
