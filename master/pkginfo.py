@@ -45,6 +45,21 @@ class PackageInfoRetriever():
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs += ["all"]
 
+    def _setPkgInstalledForArch(self, pkg, binaryName):
+        fileExt = "deb"
+        if "-udeb" in binaryName:
+            fileExt = "udeb"
+
+        for arch in self._supportedArchs:
+            if arch in pkg.installedArchs:
+                continue
+            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.version, arch, fileExt)
+            expectedPackagePath = self._archivePath + "/%s/%s" % (section["Directory"], binaryPkgName)
+
+            if os.path.isfile(expectedPackagePath):
+                pkg.installedArchs += [arch]
+
+
     def _getPackagesFor(self, dist, component):
         source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
@@ -68,18 +83,13 @@ class PackageInfoRetriever():
             # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
             # (at time, a version-check prevents packages from being built twice)
             if "," in binaries:
-                binaryName = binaries[:binaries.index(',')].strip()
+                binaryPkgs = binaries.split(', ')
             else:
-                binaryName = binaries
-            for arch in self._supportedArchs:
-                fileExt = "deb"
-                if "-udeb" in binaryName:
-                    fileExt = "udeb"
-                binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkgversion, arch, fileExt)
-                expectedPackagePath = self._archivePath + "/%s/%s" % (section["Directory"], binaryPkgName)
+                binaryPkgs = [binaries]
+            for binaryName in binaryPkgs:
+                self._setPkgInstalledForArch(pkg, binaryName)
+                #if (pkg.installedArchs != ["all"]) or (len(binaryPkgs) <= 0:
 
-                if os.path.isfile(expectedPackagePath):
-                    pkg.installedArchs += [arch]
             packageList += [pkg]
 
         return packageList
