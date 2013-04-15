@@ -25,7 +25,7 @@ from jenkinsctl import *
 from pkginfo import *
 
 class BuildJobUpdater:
-    def __init__():
+    def __init__(self):
         self._jenkins = JenkinsBridge()
         self._pkginfo = PackageInfoRetriever()
         self._scheduleBuilds = False
@@ -42,7 +42,7 @@ class BuildJobUpdater:
     def scheduleBuilds(self, value):
         self._scheduleBuilds = value
 
-    def syncPackages():
+    def syncPackages(self):
         pkgList = self._pkginfo.getAllPackages()
         for pkg in pkgList:
             # check if this is an arch:all package
@@ -55,7 +55,7 @@ class BuildJobUpdater:
                  continue
 
             for arch in self._supportedArchs:
-                if ("any" in pkg.archs) or ("linux-any" in archs) or (arch in pkg.archs):
+                if ("any" in pkg.archs) or ("linux-any" in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
                     self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, False)
                     if not arch in pkg.installedArchs:

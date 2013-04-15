@@ -79,9 +79,12 @@ class JenkinsBridge:
 
         return jobStr
 
-    def _getJobName(self, pkgname, distro, architecture):
+    def _getJobName(self, pkgname, distro, component, architecture):
         # generate generic job name
-        return "pkg+%s~%s_%s" % (pkgname, distro, architecture)
+        if component == "main":
+            return "pkg+%s~%s_%s" % (pkgname, distro, architecture)
+        else:
+            return "pkg+%s-%s~%s_%s" % (pkgname, component, distro, architecture)
 
     def _getLastBuildStatus(self, jobName):
         try:
@@ -114,7 +117,7 @@ class JenkinsBridge:
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
         # get name of the job
-        jobName = self._getJobName(pkgname, distro, architecture)
+        jobName = self._getJobName(pkgname, distro, component, architecture)
         buildArch = architecture
         if buildArch is "all":
             # we build all arch:all packages on amd64
@@ -149,14 +152,15 @@ class JenkinsBridge:
             if scheduleBuild:
                 self._runSimpleJenkinsCommand(["build", jobName])
 
-    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, distro, architecture):
-        jobName = self._getJobName(pkgname, distro, architecture)
+    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, distro, component, architecture):
+        jobName = self._getJobName(pkgname, distro, component, architecture)
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
         lastVersionBuilt = buildVersion[:buildVersion.index('#')]
         compare = version_compare(lastVersionBuilt, pkgversion)
         if (compare < 0):
+            print("*** Requesting build of %s ***" % (jobName))
             self._runSimpleJenkinsCommand(["build", jobName])
         # since lastBuildStatus returns success for builds in progress and returns the correct build number,
         # we are done here - if versions are equal, the last build was either successful or has failed.
