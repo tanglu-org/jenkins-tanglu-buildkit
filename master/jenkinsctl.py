@@ -77,7 +77,7 @@ class JenkinsBridge:
         jobStr = jobStr.replace("{{component}}", component)
         jobStr = jobStr.replace("{{pkgname}}", pkgname)
         jobStr = jobStr.replace("{{pkgversion}}", escape(pkgversion))
-        jobStr = jobStr.replace("{{info}}", escape(info, {"\n": "&#xd;"}))
+        jobStr = jobStr.replace("{{info}}", escape(info.replace("\n", "<br/>"), {"<": "&lt;", ">": "&gt;"}))
 
         return jobStr
 
