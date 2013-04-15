@@ -159,6 +159,7 @@ class JenkinsBridge:
         # get the last version of the package which has been built (buildVersion without parts after the '#')
         lastVersionBuilt = buildVersion[:buildVersion.index('#')]
         compare = version_compare(lastVersionBuilt, pkgversion)
+
         if (compare < 0):
             print("*** Requesting build of %s ***" % (jobName))
             self._runSimpleJenkinsCommand(["build", jobName])

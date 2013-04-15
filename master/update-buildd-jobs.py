@@ -28,19 +28,11 @@ class BuildJobUpdater:
     def __init__(self):
         self._jenkins = JenkinsBridge()
         self._pkginfo = PackageInfoRetriever()
-        self._scheduleBuilds = False
+        self.scheduleBuilds = True
 
         parser = SafeConfigParser()
         parser.read('jenkins-dak.conf')
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
-
-    @property
-    def scheduleBuilds(self):
-        return self._scheduleBuilds
-
-    @scheduleBuilds.setter
-    def scheduleBuilds(self, value):
-        self._scheduleBuilds = value
 
     def syncPackages(self):
         pkgList = self._pkginfo.getAllPackages()
@@ -50,7 +42,7 @@ class BuildJobUpdater:
                  # our package is arch:all, schedule it on amd64 for build
                  self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", False)
                  if not "all" in pkg.installedArchs:
-                     if self._scheduleBuilds:
+                     if self.scheduleBuilds:
                          self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.dist, arch)
                  continue
 
@@ -60,7 +52,7 @@ class BuildJobUpdater:
                     self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, False)
                     if not arch in pkg.installedArchs:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
-                        if self._scheduleBuilds:
+                        if self.scheduleBuilds:
                             self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.dist, arch)
 
 def main():
