@@ -17,7 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import subprocess
+import json
+import urllib2
 from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
 
@@ -26,6 +29,7 @@ class JenkinsBridge:
         parser = SafeConfigParser()
         parser.read('jenkins-dak.conf')
         url = parser.get('Jenkins', 'url')
+        self._jenkinsUrl = url
         if parser.has_option('Jenkins', 'private_key'):
             keyfile = parser.get('Jenkins', 'private_key')
 
@@ -75,10 +79,34 @@ class JenkinsBridge:
 
         return jobStr
 
-    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
+    def _getJobName(self, pkgname, distro, architecture):
         # generate generic job name
-        jobName = "pkg+%s~%s_%s" % (pkgname, distro, architecture)
-        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, architecture)
+        return "pkg+%s~%s_%s" % (pkgname, distro, architecture)
+
+    def _getLastBuildStatus(self, jobName):
+        try:
+            jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/lastBuild/api/json" % (jobName))
+        except urllib2.HTTPError, e:
+            print("URL Error: " + str(e.code))
+            print("(job name [" + jobName + "] probably wrong)")
+            sys.exit(2)
+        try:
+            buildStatusJson = json.load( jenkinsStream )
+        except:
+            print("Failed to parse json")
+            sys.exit(3)
+        if buildStatusJson.has_key( "result" ):
+            print("[" + jobName + "] build status: " + buildStatusJson["result"])
+
+    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, scheduleBuild=True):
+        # get name of the job
+        jobName = self._getJobName(pkgname, distro, architecture)
+        buildArch = architecture
+        if buildArch is "all":
+            # we build all arch:all packages on amd64
+            buildArch = "amd64"
+
+        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch)
 
         if jobName in self.currentJobs.keys():
             compare = version_compare(self.currentJobs[jobName], pkgversion)
@@ -106,3 +134,7 @@ class JenkinsBridge:
             # shedule build of the new package
             if scheduleBuild:
                 self._runSimpleJenkinsCommand(["build", jobName])
+
+     def scheduleBuildIfNotFailed(self, pkgname, distro, architecture):
+         jobName = self._getJobName(pkgname, distro, architecture)
+         self._runSimpleJenkinsCommand(["build", jobName])
