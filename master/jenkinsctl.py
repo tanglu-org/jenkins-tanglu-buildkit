@@ -152,7 +152,7 @@ class JenkinsBridge:
             if scheduleBuild:
                 self._runSimpleJenkinsCommand(["build", jobName])
 
-    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, distro, component, architecture):
+    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, distro, architecture):
         jobName = self._getJobName(pkgname, distro, component, architecture)
         success, buildVersion = self._getLastBuildStatus(jobName)
 
