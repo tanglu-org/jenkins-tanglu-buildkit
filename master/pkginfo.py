@@ -29,18 +29,10 @@ class PackageInfo():
         self.component = component
         self.archs = archs
         self.info = ""
-        self._installedArchs = []
+        self.installedArchs = []
 
     def __str__(self):
         return "PackageInfo_Obj: name: %s | version: %s | dist: %s | comp.: %s | archs: %s" % (self.pkgname, self.version, self.dist, self.component, self.archs)
-
-    @property
-    def installedArchs(self):
-        return self._installedArchs
-
-    @installedArchs.setter
-    def installedArchs(self, value):
-        self._installedArchs = value
 
 class PackageInfoRetriever():
     def __init__(self):
@@ -76,7 +68,7 @@ class PackageInfoRetriever():
             # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
             # (at time, a version-check prevents packages from being built twice)
             if "," in binaries:
-                binaryName = binaries[:binaries.index(',')]
+                binaryName = binaries[:binaries.index(',')].strip()
             else:
                 binaryName = binaries
             for arch in self._supportedArchs:
