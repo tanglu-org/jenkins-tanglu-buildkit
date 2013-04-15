@@ -23,6 +23,7 @@ import json
 import urllib2
 from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
+from xml.sax.saxutils import escape
 
 class JenkinsBridge:
     def __init__(self):
@@ -72,11 +73,11 @@ class JenkinsBridge:
 
     def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
         jobStr = self._jobTemplateStr.replace("{{architecture}}", architecture)
-        jobStr = jobStr.replace("{{distroname}}", distro)
+        jobStr = jobStr.replace("{{distroname}}", escape(distro))
         jobStr = jobStr.replace("{{component}}", component)
         jobStr = jobStr.replace("{{pkgname}}", pkgname)
-        jobStr = jobStr.replace("{{pkgversion}}", pkgversion)
-        jobStr = jobStr.replace("{{info}}", info)
+        jobStr = jobStr.replace("{{pkgversion}}", escape(pkgversion))
+        jobStr = jobStr.replace("{{info}}", escape(info))
 
         return jobStr
 
