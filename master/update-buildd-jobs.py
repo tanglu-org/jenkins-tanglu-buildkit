@@ -31,5 +31,10 @@ if __name__ == "__main__":
 
     # Test
     test = PackageInfoRetriever()
-    test._getPackagesFor("aequorea", "main")
+    pkgs = test.getAllPackages()
+    for pkg in pkgs:
+        archs_inst = pkg.installedArchs
+        for arch in archs_inst:
+            if not arch in pkg.archs:
+                print("Package %s not built for %s!" % (pkg.pkgname, arch))
 #    main()

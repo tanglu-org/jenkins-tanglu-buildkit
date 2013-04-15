@@ -89,6 +89,10 @@ class PackageInfoRetriever():
         return packageList
 
     def getAllPackages():
-        return 0
+        packageList = []
+        for dist in self._archiveDists:
+            for comp in self._archiveComponents:
+                packageList += self._getPackagesFor(dist, comp)
+        return packageList
 
 
