@@ -80,7 +80,6 @@ class PackageInfoRetriever():
 
                 if os.path.isfile(expectedPackagePath):
                     pkg.installedArchs += [arch]
-                    break
             packageList += [pkg]
 
         return packageList
