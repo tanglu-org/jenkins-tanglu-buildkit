@@ -45,7 +45,7 @@ class PackageInfoRetriever():
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs += ["all"]
 
-    def _setPkgInstalledForArch(self, pkg, binaryName):
+    def _setPkgInstalledForArch(self, dirname, pkg, binaryName):
         fileExt = "deb"
         if "-udeb" in binaryName:
             fileExt = "udeb"
@@ -54,7 +54,7 @@ class PackageInfoRetriever():
             if arch in pkg.installedArchs:
                 continue
             binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.version, arch, fileExt)
-            expectedPackagePath = self._archivePath + "/%s/%s" % (section["Directory"], binaryPkgName)
+            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
             if os.path.isfile(expectedPackagePath):
                 pkg.installedArchs += [arch]
@@ -87,7 +87,7 @@ class PackageInfoRetriever():
             else:
                 binaryPkgs = [binaries]
             for binaryName in binaryPkgs:
-                self._setPkgInstalledForArch(pkg, binaryName)
+                self._setPkgInstalledForArch(section["Directory"], pkg, binaryName)
                 #if (pkg.installedArchs != ["all"]) or (len(binaryPkgs) <= 0:
 
             packageList += [pkg]
