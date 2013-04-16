@@ -59,7 +59,10 @@ else
   SHORT_SEC=${PKG_NAME:0:1}
 fi
 
-ARCHIVE_DSC_PATH="$REPOSITORY_POOL/$COMPONENT/$SHORT_SEC/$PKG_NAME/$PKG_NAME""_$VERSION.dsc"
+colon_idx=$(awk -v a="$VERSION" -v b=":" 'BEGIN{print index(a,b)}')
+DSC_VERSION=${VERSION:$colon_idx}
+
+ARCHIVE_DSC_PATH="$REPOSITORY_POOL/$COMPONENT/$SHORT_SEC/$PKG_NAME/$PKG_NAME""_$DSC_VERSION.dsc"
 
 echo "*** Fetching package from $COMPONENT: $ARCHIVE_DSC_PATH ***"
 
