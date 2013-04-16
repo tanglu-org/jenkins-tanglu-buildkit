@@ -31,6 +31,13 @@ class PackageInfo():
         self.info = ""
         self.installedArchs = []
 
+    def getVersionNoEpoch():
+        v = self.version
+        if ":" in v:
+            v[v.index(":")+1:]
+        else:
+            return v
+
     def __str__(self):
         return "PackageInfo_Obj: name: %s | version: %s | dist: %s | comp.: %s | archs: %s" % (self.pkgname, self.version, self.dist, self.component, self.archs)
 
@@ -53,7 +60,7 @@ class PackageInfoRetriever():
         for arch in self._supportedArchs:
             if arch in pkg.installedArchs:
                 continue
-            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.version, arch, fileExt)
+            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch, arch, fileExt)
             expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
             if os.path.isfile(expectedPackagePath):
