@@ -29,7 +29,7 @@ build-and-push-package
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes</artifacts>
+      <artifacts>*.deb,*.udeb,*.dsc,*.changes</artifacts>
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
