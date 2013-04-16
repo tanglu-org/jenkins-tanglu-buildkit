@@ -34,7 +34,7 @@ class PackageInfo():
     def getVersionNoEpoch():
         v = self.version
         if ":" in v:
-            v[v.index(":")+1:]
+            return v[v.index(":")+1:]
         else:
             return v
 
