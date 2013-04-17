@@ -32,7 +32,7 @@ from collections import Counter
 class JenkinsBridge:
     def __init__(self):
         parser = SafeConfigParser()
-        parser.read('jenkins-dak.conf', '/etc/jenkins')
+        parser.read(['jenkins-dak.conf', '/etc/jenkins'])
         url = parser.get('Jenkins', 'url')
         self._jenkinsUrl = url
         if parser.has_option('Jenkins', 'private_key'):

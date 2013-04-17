@@ -31,7 +31,7 @@ class BuildJobUpdater:
         self.scheduleBuilds = True
 
         parser = SafeConfigParser()
-        parser.read('jenkins-dak.conf', '/etc/jenkins')
+        parser.read(['jenkins-dak.conf', '/etc/jenkins'])
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
 
     def syncPackages(self):
