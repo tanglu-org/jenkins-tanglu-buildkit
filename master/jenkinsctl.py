@@ -21,6 +21,7 @@ import sys
 import subprocess
 import json
 import urllib2
+import requests
 from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
 from xml.sax.saxutils import escape
@@ -123,11 +124,9 @@ class JenkinsBridge:
                 return True, buildVersion
 
     def _renameJob(self, currentName, newName):
-        try:
-            jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/doRename?newName=%s" % (currentName, newName))
-        except urllib2.HTTPError, e:
-            print("URL Error: " + str(e.code))
-            print("Unable to rename.")
+        r = requests.post(self._jenkinsUrl + "/job/%s/doRename?newName=%s" % (currentName, newName), data=None, allow_redirects=True)
+        if r.status_code != 400:
+            print("Error while renaming: " + r.content)
             print("(job name [" + currentName + "] probably wrong)")
             sys.exit(2)
 
