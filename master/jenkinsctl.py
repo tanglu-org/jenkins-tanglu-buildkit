@@ -179,7 +179,7 @@ class JenkinsBridge:
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
         if not jobName in self.currentJobs:
-            if self.packagesDBCounter[pkgname] == 1:
+            if (self.packagesDBCounter[pkgname] == 1) and (pkgname in self.pkgJobMatch.keys()):
                 compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
