@@ -21,6 +21,13 @@ import os.path
 from ConfigParser import SafeConfigParser
 from apt_pkg import TagFile, TagSection
 
+def noEpoch(version):
+    v = version
+    if ":" in v:
+        return v[v.index(":")+1:]
+    else:
+        return v
+
 class PackageInfo():
     def __init__(self, pkgname, pkgversion, dist, component, archs):
         self.pkgname = pkgname
@@ -32,11 +39,7 @@ class PackageInfo():
         self.installedArchs = []
 
     def getVersionNoEpoch(self):
-        v = self.version
-        if ":" in v:
-            return v[v.index(":")+1:]
-        else:
-            return v
+        return noEpoch(self.version)
 
     def __str__(self):
         return "PackageInfo_Obj: name: %s | version: %s | dist: %s | comp.: %s | archs: %s" % (self.pkgname, self.version, self.dist, self.component, self.archs)

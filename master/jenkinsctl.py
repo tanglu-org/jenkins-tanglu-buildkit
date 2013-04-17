@@ -27,7 +27,7 @@ from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
 from xml.sax.saxutils import escape
 from collections import Counter
-
+from pkginfo import noEpoch
 
 class JenkinsBridge:
     def __init__(self):
@@ -55,7 +55,7 @@ class JenkinsBridge:
         rawPkgJobLines = lines.splitlines ()
 
         # we use this to count how often a package is registered in the pool
-        self.packagesDBCounter = collections.Counter()
+        self.packagesDBCounter = Counter()
 
         self.currentJobs = []
         self.pkgJobMatch = {}
@@ -119,13 +119,6 @@ class JenkinsBridge:
 
         return s
 
-    def noEpoch(version):
-        v = version
-        if ":" in v:
-            return v[v.index(":")+1:]
-        else:
-            return v
-
     def _getLastBuildStatus(self, jobName):
         try:
             jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/lastBuild/api/json" % (jobName))
@@ -173,7 +166,7 @@ class JenkinsBridge:
             raise e
 
     def setRegisteredPackagesList(self, packagesList):
-        self.packagesDBCounter = collections.Counter(packagesList)
+        self.packagesDBCounter = Counter(packagesList)
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info=""):
         # get name of the job
