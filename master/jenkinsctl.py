@@ -218,11 +218,20 @@ class JenkinsBridge:
         else:
             # we might have an epoch bump!
             if (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
-                compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
+                currentPkgVersion = self.pkgJobMatch[pkgname][0]
+                compare = version_compare(currentPkgVersion, pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
                     return
-                print("INFO: Updating existing job, assuming epoch bump: %s -> %s" % (self.pkgJobMatch[pkgname][0], pkgversion))
+                # check for epoch bump/higher version for some reason
+                success, buildVersion = self._getLastBuildStatus(jobName)
+                lastVersionBuilt = buildVersion[:buildVersion.index('#')]
+                compare = version_compare(lastVersionBuilt, pkgversion)
+                if compare >= 0:
+                    # apparently no epoch bump
+                    return
+
+                print("INFO: Updating existing job, epoch bump found: %s, %s -> %s" % (jobName, currentPkgVersion, pkgversion))
                 p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
                 output = p.communicate(input=jobXML)
                 if p.returncode is not 0:
