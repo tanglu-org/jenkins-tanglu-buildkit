@@ -227,7 +227,8 @@ class JenkinsBridge:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, architecture):
-        jobName = self._getJobName(pkgname, pkgversion, component, architecture)
+        versionNoEpoch = noEpoch(pkgversion)
+        jobName = self._getJobName(pkgname, versionNoEpoch, component, architecture)
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
