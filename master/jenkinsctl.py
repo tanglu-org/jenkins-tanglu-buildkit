@@ -132,7 +132,7 @@ class JenkinsBridge:
             if e.code == 404:
                 # maybe the package has never been built?
                 # return a fake build-id, so a build gets scheduled
-                return False, self._getVersionFromJobName(jobName) + "#0"
+                return False, "0#0"
             print("URL Error: " + str(e.code))
             print("Unable to get build status.")
             print("(job name [" + jobName + "] probably wrong)")
@@ -148,7 +148,7 @@ class JenkinsBridge:
             parts = displayName.split (" ", 1)
             buildVersion = parts[1].strip()
         else:
-            return False, self._getVersionFromJobName(jobName) + "#0"
+            return False, "0#0"
 
         if buildStatusJson.has_key("building"):
             return True, buildVersion
