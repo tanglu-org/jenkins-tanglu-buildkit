@@ -98,6 +98,7 @@ class JenkinsBridge:
                 # return a fake build-id, so a build gets scheduled
                 return False, "0#0"
             print("URL Error: " + str(e.code))
+            print("Unable to get build status.")
             print("(job name [" + jobName + "] probably wrong)")
             sys.exit(2)
         try:
@@ -120,6 +121,19 @@ class JenkinsBridge:
                 return False, buildVersion
             else:
                 return True, buildVersion
+
+    def _renameJob(self, currentName, newName):
+        try:
+            jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/doRename?newName=%s" % (currentName, newName))
+        except urllib2.HTTPError, e:
+            if e.code == 404:
+                # maybe the package has never been built?
+                # return a fake build-id, so a build gets scheduled
+                return False, "0#0"
+            print("URL Error: " + str(e.code))
+            print("Unable to rename.")
+            print("(job name [" + jobName + "] probably wrong)")
+            sys.exit(2)
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", scheduleBuild=True):
         # get name of the job
