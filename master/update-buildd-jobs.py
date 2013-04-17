@@ -31,16 +31,23 @@ class BuildJobUpdater:
         self.scheduleBuilds = True
 
         parser = SafeConfigParser()
-        parser.read('jenkins-dak.conf')
+        parser.read('jenkins-dak.conf', '/etc/jenkins')
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
 
     def syncPackages(self):
         pkgList = self._pkginfo.getAllPackages()
+        # generate list of all package names, to make the Jenkins job builder
+        # smarter in determining if a package was replaced or is still valid
+        pkgNameList = []
+        for pkg in pkgList:
+            pkgNameList += [pkg.pkgname]
+        self._jenkins.setRegisteredPackagesList(pkgNameList)
+
         for pkg in pkgList:
             # check if this is an arch:all package
             if pkg.archs == "all":
                  # our package is arch:all, schedule it on amd64 for build
-                 self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info, False)
+                 self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
                  if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
                          self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all")
@@ -49,7 +56,7 @@ class BuildJobUpdater:
             for arch in self._supportedArchs:
                 if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
-                    self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info, False)
+                    self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not arch in pkg.installedArchs:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
                         if self.scheduleBuilds:

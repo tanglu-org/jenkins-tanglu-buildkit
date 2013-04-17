@@ -44,7 +44,7 @@ class PackageInfo():
 class PackageInfoRetriever():
     def __init__(self):
         parser = SafeConfigParser()
-        parser.read('jenkins-dak.conf')
+        parser.read('jenkins-dak.conf', '/etc/jenkins')
         path = parser.get('Archive', 'path')
         self._archivePath = path
         self._archiveComponents = parser.get('Archive', 'components').split (" ")

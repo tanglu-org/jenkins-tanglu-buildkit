@@ -21,19 +21,23 @@ import sys
 import subprocess
 import json
 import urllib2
-import requests
+import urllib
+import base64
 from ConfigParser import SafeConfigParser
 from apt_pkg import version_compare
 from xml.sax.saxutils import escape
+from collections import Counter
+
 
 class JenkinsBridge:
     def __init__(self):
         parser = SafeConfigParser()
-        parser.read('jenkins-dak.conf')
+        parser.read('jenkins-dak.conf', '/etc/jenkins')
         url = parser.get('Jenkins', 'url')
         self._jenkinsUrl = url
         if parser.has_option('Jenkins', 'private_key'):
             keyfile = parser.get('Jenkins', 'private_key')
+        self._authToken = parser.get('Jenkins', 'token')
 
         # check if we have a usable connection to Jenkins (authenticated as dak)
         self.jenkins_cmd = ["jenkins-cli", "-s", url]
@@ -45,16 +49,26 @@ class JenkinsBridge:
         self._jobTemplateStr = open('templates/pkg-job-template.xml', 'r').read()
 
         # fetch all currently registered jobs and their versions (by using a small Groovy script - hackish, but it works)
+        # this is only needed because the package-job name does not store an epoch
         scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-jobversions.groovy"
         lines = self._runSimpleJenkinsCommand(["groovy", scriptPath])
         rawPkgJobLines = lines.splitlines ()
 
-        self.currentJobs = {}
+        # we use this to count how often a package is registered in the pool
+        self.packagesDBCounter = collections.Counter()
+
+        self.currentJobs = []
+        self.pkgJobMatch = {}
         for jobln in rawPkgJobLines:
            pkgjob_parts = jobln.strip ().split (" ", 1)
            if len (pkgjob_parts) > 1:
-               # map package-job name to version
-               self.currentJobs[pkgjob_parts[0].strip ()] = pkgjob_parts[1].strip ()
+               # map job name to package-name and version
+               pkgName = self._getPkgNameFromJobName(jobln)
+               pkgVersion = pkgjob_parts[1].strip ()
+               jobName = pkgjob_parts[0].strip ()
+               self.pkgJobMatch[pkgName] = [pkgVersion, jobName]
+               # add job to list of registered jobs
+               self.currentJobs += [jobName]
 
     def _runSimpleJenkinsCommand(self, options, failOnError=True):
         p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -83,12 +97,34 @@ class JenkinsBridge:
 
         return jobStr
 
-    def _getJobName(self, pkgname, distro, component, architecture):
+    def _getJobName(self, pkgname, version, component, architecture):
         # generate generic job name
         if component == "main":
-            return "pkg+%s~%s_%s" % (pkgname, distro, architecture)
+            return "pkg+%s_%s_%s" % (pkgname, version, architecture)
         else:
-            return "pkg+%s-%s~%s_%s" % (pkgname, component, distro, architecture)
+            return "pkg+%s-%s_%s_%s" % (pkgname, component, version, architecture)
+
+    def _getVersionFromJobName(self, jobName):
+        s = jobName[::-1]
+        s = s[s.index("_")+1:]
+        s = s[:s.index("_")]
+
+        return s[::-1]
+
+    def _getPkgNameFromJobName(self, jobName):
+        s = jobName[jobName.index("+")+1:]
+        s = s[::-1]
+        s = s[s.index("_")+1:]
+        s = s[s.index("_")+1:]
+
+        return s
+
+    def noEpoch(version):
+        v = version
+        if ":" in v:
+            return v[v.index(":")+1:]
+        else:
+            return v
 
     def _getLastBuildStatus(self, jobName):
         try:
@@ -124,15 +160,24 @@ class JenkinsBridge:
                 return True, buildVersion
 
     def _renameJob(self, currentName, newName):
-        r = requests.post(self._jenkinsUrl + "/job/%s/doRename?newName=%s" % (currentName, newName), data=None, allow_redirects=True)
-        if r.status_code != 400:
-            print("Error while renaming: " + r.content)
-            print("(job name [" + currentName + "] probably wrong)")
-            sys.exit(2)
+        qs = urllib.urlencode({'newName': newName})
+        rename_job_url = self._jenkinsUrl + "/job/%s/doRename?%s" % (currentName, qs)
 
-    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", scheduleBuild=True):
+        request = urllib2.Request(url=rename_job_url, data='')
+        base64string = base64.encodestring('%s:%s' % ("dak", self._authToken)).replace('\n', '')
+        request.add_header("Authorization", "Basic %s" % base64string)
+        try:
+            result = urllib2.urlopen(request).read()
+        except urllib2.HTTPError, e:
+            print("Error post data %s" % rename_job_url)
+            raise e
+
+    def setRegisteredPackagesList(self, packagesList):
+        self.packagesDBCounter = collections.Counter(packagesList)
+
+    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info=""):
         # get name of the job
-        jobName = self._getJobName(pkgname, distro, component, architecture)
+        jobName = self._getJobName(pkgname, noEpoch(pkgversion), component, architecture)
         buildArch = architecture
         if buildArch is "all":
             # we build all arch:all packages on amd64
@@ -140,32 +185,34 @@ class JenkinsBridge:
 
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
-        if jobName in self.currentJobs.keys():
-            compare = version_compare(self.currentJobs[jobName], pkgversion)
+        if not jobName in self.currentJobs:
+            compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
             if compare >= 0:
                 # the version already registered for build is higher or equal to the new one - we skip this package
                 return
+            if self.packagesDBCounter[pkgname] == 1:
+                # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
+                oldJobName = self.pkgJobMatch[pkgname][1]
+                self._renameJob(oldJobName, jobName)
+                self.currentJobs -= [oldJobName]
 
-            p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output = p.communicate(input=jobXML)
-            if p.returncode is not 0:
-                raise Exception("Failed updating %s:\n%s" % (jobName, output))
+                p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+                output = p.communicate(input=jobXML)
+                if p.returncode is not 0:
+                    raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
-            print("*** Successfully updated job: %s ***" % (jobName))
-            # shedule build of changed package
-            if scheduleBuild:
-                self._runSimpleJenkinsCommand(["build", jobName])
-        else:
-            p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output = p.communicate(input=jobXML)
-            if p.returncode is not 0:
-                raise Exception("Failed adding %s:\n%s" % (jobName, output))
+                self.currentJobs += [jobName]
+                self.pkgJobMatch[pkgName] = [pkgVersion, jobName]
+                print("*** Successfully updated job: %s ***" % (jobName))
+            else:
+                p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+                output = p.communicate(input=jobXML)
+                if p.returncode is not 0:
+                    raise Exception("Failed adding %s:\n%s" % (jobName, output))
 
-            self.currentJobs[jobName] = pkgversion
-            print("*** Successfully created new job: %s ***" % (jobName))
-            # shedule build of the new package
-            if scheduleBuild:
-                self._runSimpleJenkinsCommand(["build", jobName])
+                self.currentJobs += [jobName]
+                self.pkgJobMatch[pkgName] = [pkgVersion, jobName]
+                print("*** Successfully created new job: %s ***" % (jobName))
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, distro, architecture):
         jobName = self._getJobName(pkgname, distro, component, architecture)
