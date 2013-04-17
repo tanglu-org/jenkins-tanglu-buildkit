@@ -318,6 +318,7 @@ cowbuilder_run() {
 #    fi
 #  fi
 
+  DEBBUILDOPTS="$DEBBUILDOPTS -e '$DEBEMAIL'"
   case "$architecture" in
     i386)
       linux32 sudo cowbuilder --buildresult "$WORKSPACE"/binaries/ \
