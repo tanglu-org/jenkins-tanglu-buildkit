@@ -1,1 +1,5 @@
-Please head over to [[http://jenkins-debian-glue.org/][jenkins-debian-glue.org]] for setup instructions and documentation.
+
+The slave parts of the Buildkit are based on jenkins-debian-glue
+Please head over to [[http://jenkins-debian-glue.org/][jenkins-debian-glue.org]] for the original project.
+
+The software was designed for Tanglu GNU/Linux, but it may be useful for others too.

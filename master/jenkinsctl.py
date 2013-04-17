@@ -62,11 +62,11 @@ class JenkinsBridge:
         for jobln in rawPkgJobLines:
            pkgjob_parts = jobln.strip ().split (" ", 1)
            if len (pkgjob_parts) > 1:
-               # map job name to package-name and version
-               pkgName = self._getPkgNameFromJobName(jobln)
+               # map job name to package-name, version and arch
                pkgVersion = pkgjob_parts[1].strip ()
                jobName = pkgjob_parts[0].strip ()
-               self.pkgJobMatch[pkgName] = [pkgVersion, jobName]
+               pkgName = self._getPkgNameFromJobName(jobName)
+               self.pkgJobMatch[pkgName] = [pkgVersion, jobName, self._getArchFromJobName(jobName)]
                # add job to list of registered jobs
                self.currentJobs += [jobName]
 
@@ -118,6 +118,12 @@ class JenkinsBridge:
         s = s[s.index("_")+1:]
 
         return s
+
+    def _getArchFromJobName(self, jobName):
+        s = jobName[::-1]
+        s = s[:s.index("_")]
+
+        return s[::-1]
 
     def _getLastBuildStatus(self, jobName):
         try:
@@ -179,7 +185,7 @@ class JenkinsBridge:
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
         if not jobName in self.currentJobs:
-            if (self.packagesDBCounter[pkgname] == 1) and (pkgname in self.pkgJobMatch.keys()):
+            if (self.packagesDBCounter[pkgname] == 1) and (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
                 compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
