@@ -213,6 +213,18 @@ class JenkinsBridge:
                 self.currentJobs += [jobName]
                 self.pkgJobMatch[pkgname] = [pkgversion, jobName, architecture]
                 print("*** Successfully created new job: %s ***" % (jobName))
+        else:
+            # we might have an epoch bump!
+            if (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
+                compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
+                if compare >= 0:
+                    # the version already registered for build is higher or equal to the new one - we skip this package
+                    return
+                print("INFO: Updating existing job, assuming epoch bump: %s -> %s" % (self.pkgJobMatch[pkgname][0], pkgversion))
+                p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+                output = p.communicate(input=jobXML)
+                if p.returncode is not 0:
+                    raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, architecture):
         jobName = self._getJobName(pkgname, pkgversion, component, architecture)
