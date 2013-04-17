@@ -202,7 +202,7 @@ class JenkinsBridge:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
                 self.currentJobs += [jobName]
-                self.pkgJobMatch[pkgname] = [pkgversion, jobName]
+                self.pkgJobMatch[pkgname] = [pkgversion, jobName, architecture]
                 print("*** Successfully updated job: %s ***" % (jobName))
             else:
                 p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -211,7 +211,7 @@ class JenkinsBridge:
                     raise Exception("Failed adding %s:\n%s" % (jobName, output))
 
                 self.currentJobs += [jobName]
-                self.pkgJobMatch[pkgname] = [pkgversion, jobName]
+                self.pkgJobMatch[pkgname] = [pkgversion, jobName, architecture]
                 print("*** Successfully created new job: %s ***" % (jobName))
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, architecture):
