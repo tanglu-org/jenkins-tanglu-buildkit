@@ -87,7 +87,12 @@ class JenkinsBridge:
         return p.returncode, resLines
 
     def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
-        info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>") + "<br/><br/>"
+        # Create the information html
+        info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+        if component != "main":
+            info_html = info_html + "<strong>This package is part of the <em>%s</em> depertment!</strong>" % (component)
+        info_html = info_html + "<br/><br/>"
+
         jobStr = self._jobTemplateStr.replace("{{architecture}}", architecture)
         jobStr = jobStr.replace("{{distroname}}", escape(distro))
         jobStr = jobStr.replace("{{component}}", component)
@@ -97,12 +102,9 @@ class JenkinsBridge:
 
         return jobStr
 
-    def _getJobName(self, pkgname, version, component, architecture):
+    def _getJobName(self, pkgname, version, architecture):
         # generate generic job name
-        if component == "main":
-            return "pkg+%s_%s_%s" % (pkgname, version, architecture)
-        else:
-            return "pkg+%s-%s_%s_%s" % (pkgname, component, version, architecture)
+        return "pkg+%s_%s_%s" % (pkgname, version, architecture)
 
     def _getVersionFromJobName(self, jobName):
         s = jobName[::-1]
@@ -176,7 +178,7 @@ class JenkinsBridge:
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info=""):
         # get name of the job
-        jobName = self._getJobName(pkgname, noEpoch(pkgversion), component, architecture)
+        jobName = self._getJobName(pkgname, noEpoch(pkgversion), architecture)
         buildArch = architecture
         if buildArch is "all":
             # we build all arch:all packages on amd64
@@ -226,9 +228,9 @@ class JenkinsBridge:
                 if p.returncode is not 0:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
-    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, component, architecture):
+    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
-        jobName = self._getJobName(pkgname, versionNoEpoch, component, architecture)
+        jobName = self._getJobName(pkgname, versionNoEpoch, architecture)
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')

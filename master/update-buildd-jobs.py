@@ -50,7 +50,7 @@ class BuildJobUpdater:
                  self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
                  if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
-                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.component, "all")
+                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, "all")
                  continue
 
             for arch in self._supportedArchs:
@@ -60,7 +60,7 @@ class BuildJobUpdater:
                     if not arch in pkg.installedArchs:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
                         if self.scheduleBuilds:
-                            self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, pkg.component, arch)
+                            self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
 
 def main():
     # init Apt, we need it later
