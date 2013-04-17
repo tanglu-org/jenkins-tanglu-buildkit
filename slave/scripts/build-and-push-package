@@ -324,7 +324,7 @@ cowbuilder_run() {
         --build $sourcefile \
         --basepath "${COWBUILDER_BASE}" --debbuildopts "${DEBBUILDOPTS:-}" \
         --hookdir "${PBUILDER_HOOKDIR}" --bindmounts "$BINDMOUNTS" \
-        --debbuildopts "-m${DEBEMAIL:-}"
+        --debbuildopts "-m'${DEBEMAIL}'"
       [ $? -eq 0 ] || bailout 1 "Error: Failed to build with cowbuilder."
       ;;
     amd64|all|*)
@@ -332,7 +332,7 @@ cowbuilder_run() {
         --build $sourcefile \
         --basepath "${COWBUILDER_BASE}" --debbuildopts "${DEBBUILDOPTS:-}" \
         --hookdir "${PBUILDER_HOOKDIR}" --bindmounts "$BINDMOUNTS" \
-        --debbuildopts "-m${DEBEMAIL:-}"
+        --debbuildopts "-m'${DEBEMAIL}'"
       [ $? -eq 0 ] || bailout 1 "Error: Failed to build with cowbuilder."
       ;;
     *)
