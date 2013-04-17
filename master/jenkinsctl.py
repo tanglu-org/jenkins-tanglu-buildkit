@@ -179,11 +179,12 @@ class JenkinsBridge:
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
         if not jobName in self.currentJobs:
-            compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
-            if compare >= 0:
-                # the version already registered for build is higher or equal to the new one - we skip this package
-                return
             if self.packagesDBCounter[pkgname] == 1:
+                compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
+                if compare >= 0:
+                    # the version already registered for build is higher or equal to the new one - we skip this package
+                    return
+
                 # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
                 oldJobName = self.pkgJobMatch[pkgname][1]
                 self._renameJob(oldJobName, jobName)
