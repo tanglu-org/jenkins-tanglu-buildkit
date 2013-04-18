@@ -215,7 +215,7 @@ class JenkinsBridge:
                 # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
                 oldJobName = self.pkgJobMatch[pkgname][1]
                 self._renameJob(oldJobName, jobName)
-                self.currentJobs -= [oldJobName]
+                self.currentJobs.remove(oldJobName)
 
                 p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
                 output = p.communicate(input=jobXML)

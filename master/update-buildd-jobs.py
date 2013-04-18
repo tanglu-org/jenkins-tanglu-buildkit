@@ -62,7 +62,7 @@ class BuildJobUpdater:
                         if self.scheduleBuilds:
                             self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
 
-    def cruftReport(self):
+    def _getCruftJobs(self):
         pkgList = self._pkginfo.getAllPackages()
         jobList = self._jenkins.currentJobs
 
@@ -81,7 +81,10 @@ class BuildJobUpdater:
                     jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
                     if jobName in jobList:
                         jobList.remove(jobName)
+        return jobList
 
+    def cruftReport(self):
+        jobList = self._getCruftJobs()
         for job in jobList:
             print("Cruft: %s" % (job))
 
