@@ -66,16 +66,17 @@ class JenkinsBridge:
                pkgVersion = pkgjob_parts[1].strip ()
                jobName = pkgjob_parts[0].strip ()
                pkgName = self._getPkgNameFromJobName(jobName)
+               # add job to list of registered jobs
+               self.currentJobs += [jobName]
+
                # replace it only if the version of the new item is higher (required to handle epoch bumps and new uploads)
                if pkgName in self.pkgJobMatch:
                    regVersion = self.pkgJobMatch[pkgName][0]
                    compare = version_compare(regVersion, pkgVersion)
                    if compare >= 0:
                        continue
-
                self.pkgJobMatch[pkgName] = [pkgVersion, jobName, self._getArchFromJobName(jobName)]
-               # add job to list of registered jobs
-               self.currentJobs += [jobName]
+
 
     def _runSimpleJenkinsCommand(self, options, failOnError=True):
         p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
