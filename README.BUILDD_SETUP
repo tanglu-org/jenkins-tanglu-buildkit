@@ -49,6 +49,10 @@ Move /etc/jenkins/debian_glue.example to /etc/jenkins/debian_glue and change the
 You will have to set DEBEMAIL to the mail address you used for the GPG key before.
 Also, set KEY_ID to the ID of your GPG-key.
 
+Create the outgoing and log directories:
+mkdir /srv/buildd/logs
+mkdir /srv/buildd/outgoing
+
 === 8. Configure dput ===
 Login as buildd, create ~/.dput.cf with the following content:
 
