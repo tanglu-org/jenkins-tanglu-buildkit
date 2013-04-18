@@ -218,7 +218,7 @@ class JenkinsBridge:
         else:
             # we might have an epoch bump!
             if (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
-                currentPkgVersion = self.pkgJobMatch[pkgname][0]
+                currentPkgVersion = self._getVersionFromJobName(jobName)
                 compare = version_compare(currentPkgVersion, pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
