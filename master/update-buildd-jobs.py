@@ -67,15 +67,20 @@ class BuildJobUpdater:
         jobList = self._jenkins.currentJobs
 
         for pkg in pkgList:
-            if "," in pkg.archs:
-                archs = pkg.archs.split(', ')
+            if ' ' in pkg.archs:
+                archs = pkg.archs.split(' ')
             else:
                 archs = [pkg.archs]
 
-            for arch in archs:
+            if pkg.archs == "all":
                 jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
                 if jobName in jobList:
                     jobList.remove(jobName)
+            for arch in self._supportedArchs:
+                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
+                    jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
+                    if jobName in jobList:
+                        jobList.remove(jobName)
 
         for job in jobList:
             print("Cruft: %s" % (job))
