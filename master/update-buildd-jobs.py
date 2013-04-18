@@ -69,7 +69,8 @@ class BuildJobUpdater:
         for pkg in pkgList:
             for arch in pkg.archs.split (", "):
                 jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
-                jobList.remove(jobName)
+                if jobName in jobList:
+                    jobList.remove(jobName)
 
         for job in jobList:
             print("Cruft: %s" % (job))
