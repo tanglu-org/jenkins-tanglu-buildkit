@@ -67,7 +67,12 @@ class BuildJobUpdater:
         jobList = self._jenkins.currentJobs
 
         for pkg in pkgList:
-            for arch in pkg.archs.split (", "):
+            if "," in pkg.archs:
+                archs = pkg.archs.split(', ')
+            else:
+                archs = [pkg.archs]
+
+            for arch in archs:
                 jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
                 if jobName in jobList:
                     jobList.remove(jobName)
