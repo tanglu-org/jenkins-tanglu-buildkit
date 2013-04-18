@@ -29,6 +29,7 @@ class BuildJobUpdater:
         self._jenkins = JenkinsBridge()
         self._pkginfo = PackageInfoRetriever()
         self.scheduleBuilds = True
+        self.debugMode = False
 
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
@@ -58,7 +59,8 @@ class BuildJobUpdater:
                     # we add new packages for our binary architectures
                     self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not arch in pkg.installedArchs:
-                        print("Package %s not built for %s!" % (pkg.pkgname, arch))
+                        if self.debugMode:
+                            print("Package %s not built for %s!" % (pkg.pkgname, arch))
                         if self.scheduleBuilds:
                             self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
 

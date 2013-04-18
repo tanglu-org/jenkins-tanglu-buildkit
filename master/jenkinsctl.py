@@ -58,7 +58,7 @@ class JenkinsBridge:
         self.packagesDBCounter = Counter()
 
         self.currentJobs = []
-        self.pkgJobMatch = {}
+        self.jobInfoDict = {}
         for jobln in rawPkgJobLines:
            pkgjob_parts = jobln.strip ().split (" ", 1)
            if len (pkgjob_parts) > 1:
@@ -70,12 +70,13 @@ class JenkinsBridge:
                self.currentJobs += [jobName]
 
                # replace it only if the version of the new item is higher (required to handle epoch bumps and new uploads)
-               if pkgName in self.pkgJobMatch:
-                   regVersion = self.pkgJobMatch[pkgName][0]
+               if pkgName in self.jobInfoDict:
+                   regVersion = self.jobInfoDict[pkgName][0]
                    compare = version_compare(regVersion, pkgVersion)
                    if compare >= 0:
                        continue
-               self.pkgJobMatch[pkgName] = [pkgVersion, jobName]
+               jobIdentifier = pkgName + "_" + self._getArchFromJobName(jobName)
+               self.jobInfoDict[jobIdentifier] = [pkgVersion, jobName]
 
         self.queuedJobs = []
         self._refreshJobQueueInfo()
@@ -195,6 +196,12 @@ class JenkinsBridge:
     def setRegisteredPackagesList(self, packagesList):
         self.packagesDBCounter = Counter(packagesList)
 
+    def _createJob(self, jobName, jobXML):
+        p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = p.communicate(input=jobXML)
+        if p.returncode is not 0:
+            raise Exception("Failed adding %s:\n%s" % (jobName, output))
+
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
         jobName = self.getJobName(pkgname, noEpoch(pkgversion), architecture)
@@ -204,11 +211,17 @@ class JenkinsBridge:
             buildArch = "amd64"
 
         jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
+        jobIdentifier = pkgname + "_" + architecture
 
         if not jobName in self.currentJobs:
-            if ((alwaysRename) or (self.packagesDBCounter[pkgname] == 1)) and (pkgname in self.pkgJobMatch.keys()):
+            if ((alwaysRename) or (self.packagesDBCounter[pkgname] == 1)) and (jobIdentifier in self.jobInfoDict.keys()):
+                compare = version_compare(self.jobInfoDict[jobIdentifier][0], pkgversion)
+                if compare >= 0:
+                    # the version already registered for build is higher or equal to the new one - no need for an update
+                    return
+
                 # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
-                oldJobName = self.pkgJobMatch[pkgname][1]
+                oldJobName = self.jobInfoDict[jobIdentifier][1]
                 self._renameJob(oldJobName, jobName)
                 self.currentJobs.remove(oldJobName)
 
@@ -218,21 +231,18 @@ class JenkinsBridge:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
                 self.currentJobs += [jobName]
-                self.pkgJobMatch[pkgname] = [pkgversion, jobName]
+                self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
                 print("*** Successfully updated job: %s ***" % (jobName))
             else:
-                p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                output = p.communicate(input=jobXML)
-                if p.returncode is not 0:
-                    raise Exception("Failed adding %s:\n%s" % (jobName, output))
+                self._createJob(jobName, jobXML)
 
                 self.currentJobs += [jobName]
-                self.pkgJobMatch[pkgname] = [pkgversion, jobName]
+                self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
                 print("*** Successfully created new job: %s ***" % (jobName))
         else:
             # we might have an epoch bump!
-            if (pkgname in self.pkgJobMatch.keys()):
-                currentPkgVersion = self.pkgJobMatch[pkgname][0]
+            if (jobIdentifier in self.jobInfoDict.keys()):
+                currentPkgVersion = self.jobInfoDict[jobIdentifier][0]
                 compare = version_compare(currentPkgVersion, pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
@@ -250,7 +260,7 @@ class JenkinsBridge:
                 output = p.communicate(input=jobXML)
                 if p.returncode is not 0:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
-                self.pkgJobMatch[pkgname] = [pkgversion, jobName]
+                self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
