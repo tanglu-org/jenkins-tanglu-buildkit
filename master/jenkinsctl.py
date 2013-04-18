@@ -261,7 +261,7 @@ class JenkinsBridge:
         versionNoEpoch = noEpoch(pkgversion)
         jobName = self.getJobName(pkgname, versionNoEpoch, architecture)
         # if this job is already queued, we don't have to do anything
-        if jobName in self._queuedJobs:
+        if jobName in self.queuedJobs:
             return
         success, buildVersion = self._getLastBuildStatus(jobName)
 
