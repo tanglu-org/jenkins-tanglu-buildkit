@@ -119,7 +119,7 @@ class JenkinsBridge:
         s = s[s.index("_")+1:]
         s = s[s.index("_")+1:]
 
-        return s
+        return s[::-1]
 
     def _getArchFromJobName(self, jobName):
         s = jobName[::-1]
