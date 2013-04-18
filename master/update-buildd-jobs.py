@@ -62,17 +62,17 @@ class BuildJobUpdater:
                         if self.scheduleBuilds:
                             self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
 
-     def cruftReport(self):
-         pkgList = self._pkginfo.getAllPackages()
-         jobList = self._jenkins.currentJobs
+    def cruftReport(self):
+        pkgList = self._pkginfo.getAllPackages()
+        jobList = self._jenkins.currentJobs
 
-         for pkg in pkgList:
-             for arch in pkg.archs.split (", "):
-                 jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
-                 jobList -= [jobName]
+        for pkg in pkgList:
+            for arch in pkg.archs.split (", "):
+                jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
+                jobList -= [jobName]
 
-         for job in jobList:
-             print("Cruft: %s" % (job))
+        for job in jobList:
+            print("Cruft: %s" % (job))
 
 def main():
     # init Apt, we need it later
