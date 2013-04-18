@@ -263,6 +263,11 @@ class JenkinsBridge:
         # if this job is already queued, we don't have to do anything
         if jobName in self.queuedJobs:
             return
+        # if Jenkins doesn't know the job, skip it
+        if not jobName in self.currentJobs:
+            print("INFO: Skipping build request for %s" % (jobName))
+            return
+
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
