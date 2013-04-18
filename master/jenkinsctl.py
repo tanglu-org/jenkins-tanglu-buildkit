@@ -231,7 +231,7 @@ class JenkinsBridge:
                     # apparently no epoch bump
                     return
 
-                print("INFO: Updating existing job, epoch bump found: %s, %s -> %s" % (jobName, currentPkgVersion, pkgversion))
+                print("INFO: Updating existing job, epoch bump found: pkg:%s/%s, %s -> %s" % (pkgname, jobName, currentPkgVersion, pkgversion))
                 p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
                 output = p.communicate(input=jobXML)
                 if p.returncode is not 0:
