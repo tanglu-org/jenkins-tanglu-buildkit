@@ -176,7 +176,7 @@ class JenkinsBridge:
     def setRegisteredPackagesList(self, packagesList):
         self.packagesDBCounter = Counter(packagesList)
 
-    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info=""):
+    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
         jobName = self._getJobName(pkgname, noEpoch(pkgversion), architecture)
         buildArch = architecture
@@ -184,7 +184,7 @@ class JenkinsBridge:
             # we build all arch:all packages on amd64
             buildArch = "amd64"
 
-        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info, alwaysRename=True)
+        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
 
         if not jobName in self.currentJobs:
             if ((alwaysRename) or (self.packagesDBCounter[pkgname] == 1)) and (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
