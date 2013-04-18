@@ -104,7 +104,7 @@ class JenkinsBridge:
 
     def getJobName(self, pkgname, version, architecture):
         # generate generic job name
-        return "pkg+%s_%s_%s" % (pkgname, version, architecture)
+        return "pkg+%s_%s_%s" % (pkgname, noEpoch(version), architecture)
 
     def _getVersionFromJobName(self, jobName):
         s = jobName[::-1]
