@@ -46,7 +46,7 @@ class JenkinsBridge:
             raise Exception("Unable to authenticate against Jenkins!\nOutput: %s" % (outputLines))
 
         # load our job template now, so we can access it faster
-        self._jobTemplateStr = open('templates/pkg-job-template.xml', 'r').read()
+        self._jobTemplateStr = open(os.path.dirname(os.path.realpath(__file__)) + '/templates/pkg-job-template.xml', 'r').read()
 
         # fetch all currently registered jobs and their versions (by using a small Groovy script - hackish, but it works)
         # this is only needed because the package-job name does not store an epoch
