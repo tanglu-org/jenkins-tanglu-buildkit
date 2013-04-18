@@ -62,6 +62,18 @@ class BuildJobUpdater:
                         if self.scheduleBuilds:
                             self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
 
+     def cruftReport(self):
+         pkgList = self._pkginfo.getAllPackages()
+         jobList = self._jenkins.currentJobs
+
+         for pkg in pkgList:
+             for arch in pkg.archs.split (", "):
+                 jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
+                 jobList -= [jobName]
+
+         for job in jobList:
+             print("Cruft: %s" % (job))
+
 def main():
     # init Apt, we need it later
     apt_pkg.init()
@@ -70,6 +82,9 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
+    parser.add_option("--cruft-report",
+                  action="store_true", dest="cruft_report", default=False,
+                  help="report jobs without matching package")
     parser.add_option("--nobuild",
                   action="store_true", dest="no_build", default=False,
                   help="don't schedule any builds")
@@ -80,6 +95,9 @@ def main():
         sync = BuildJobUpdater()
         sync.scheduleBuilds = not options.no_build
         sync.syncPackages()
+    elif options.cruft_report:
+        sync = BuildJobUpdater()
+        sync.cruftReport()
     else:
         print("Run with -h for a list of available command-line options!")
 

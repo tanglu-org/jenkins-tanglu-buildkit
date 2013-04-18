@@ -102,7 +102,7 @@ class JenkinsBridge:
 
         return jobStr
 
-    def _getJobName(self, pkgname, version, architecture):
+    def getJobName(self, pkgname, version, architecture):
         # generate generic job name
         return "pkg+%s_%s_%s" % (pkgname, version, architecture)
 
@@ -178,7 +178,7 @@ class JenkinsBridge:
 
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
-        jobName = self._getJobName(pkgname, noEpoch(pkgversion), architecture)
+        jobName = self.getJobName(pkgname, noEpoch(pkgversion), architecture)
         buildArch = architecture
         if buildArch is "all":
             # we build all arch:all packages on amd64
@@ -240,7 +240,7 @@ class JenkinsBridge:
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
-        jobName = self._getJobName(pkgname, versionNoEpoch, architecture)
+        jobName = self.getJobName(pkgname, versionNoEpoch, architecture)
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
