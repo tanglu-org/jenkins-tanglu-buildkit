@@ -13,5 +13,5 @@ for (job in pkgJobs) {
     cl -> if (cl.getClass().equals(org.jenkinsci.plugins.buildnamesetter.BuildNameSetter))
       jobVersion = cl.template.replace('#${BUILD_NUMBER}', "");
   }
-  println jobName + " " + jobVersion;
+  println(jobName + " " + jobVersion);
 }
