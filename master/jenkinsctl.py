@@ -184,10 +184,10 @@ class JenkinsBridge:
             # we build all arch:all packages on amd64
             buildArch = "amd64"
 
-        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
+        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info, alwaysRename=True)
 
         if not jobName in self.currentJobs:
-            if (self.packagesDBCounter[pkgname] == 1) and (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
+            if ((alwaysRename) or (self.packagesDBCounter[pkgname] == 1)) and (pkgname in self.pkgJobMatch.keys()) and (self.pkgJobMatch[pkgname][2] == architecture):
                 compare = version_compare(self.pkgJobMatch[pkgname][0], pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
@@ -236,6 +236,7 @@ class JenkinsBridge:
                 output = p.communicate(input=jobXML)
                 if p.returncode is not 0:
                     raise Exception("Failed updating %s:\n%s" % (jobName, output))
+                self.pkgJobMatch[pkgname] = [pkgversion, jobName, architecture]
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
