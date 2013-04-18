@@ -73,7 +73,7 @@ class BuildJobUpdater:
                 archs = [pkg.archs]
 
             if pkg.archs == "all":
-                jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
+                jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, "all")
                 if jobName in jobList:
                     jobList.remove(jobName)
             for arch in self._supportedArchs:
