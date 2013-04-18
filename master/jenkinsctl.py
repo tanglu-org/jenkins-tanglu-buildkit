@@ -77,6 +77,8 @@ class JenkinsBridge:
                        continue
                self.pkgJobMatch[pkgName] = [pkgVersion, jobName, self._getArchFromJobName(jobName)]
 
+        self.queuedJobs = []
+        self._refreshJobQueueInfo()
 
     def _runSimpleJenkinsCommand(self, options, failOnError=True):
         p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -93,6 +95,15 @@ class JenkinsBridge:
             return resLines
 
         return p.returncode, resLines
+
+    def _refreshJobQueueInfo(self):
+        scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-queued-jobs.groovy"
+        lines = self._runSimpleJenkinsCommand(["groovy", scriptPath])
+        rawPkgJobLines = lines.splitlines ()
+        for jobln in rawPkgJobLines:
+            if self._getVersionFromJobName(jobln) != "":
+                self.queuedJobs += [jobln]
+
 
     def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
         # Create the information html
@@ -249,6 +260,9 @@ class JenkinsBridge:
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
         jobName = self.getJobName(pkgname, versionNoEpoch, architecture)
+        # if this job is already queued, we don't have to do anything
+        if jobName in self._queuedJobs:
+            return
         success, buildVersion = self._getLastBuildStatus(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
