@@ -41,7 +41,7 @@ class JenkinsBridge:
 
         # check if we have a usable connection to Jenkins (authenticated as dak)
         self.jenkins_cmd = ["jenkins-cli", "-s", url]
-        code, outputLines = self._runSimpleJenkinsCommand(["who-am-i"], False)
+        code, outputLines = self._run_simple_jenkins_command(["who-am-i"], False)
         if (code != 0) or (not outputLines.startswith("Authenticated as: dak")):
             raise Exception("Unable to authenticate against Jenkins!\nOutput: %s" % (outputLines))
 
@@ -51,7 +51,7 @@ class JenkinsBridge:
         # fetch all currently registered jobs and their versions (by using a small Groovy script - hackish, but it works)
         # this is only needed because the package-job name does not store an epoch
         scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-jobversions.groovy"
-        lines = self._runSimpleJenkinsCommand(["groovy", scriptPath])
+        lines = self._run_simple_jenkins_command(["groovy", scriptPath])
         rawPkgJobLines = lines.splitlines ()
 
         # we use this to count how often a package is registered in the pool
@@ -65,7 +65,7 @@ class JenkinsBridge:
                # map job name to package-name, version and arch
                pkgVersion = pkgjob_parts[1].strip ()
                jobName = pkgjob_parts[0].strip ()
-               pkgName = self._getPkgNameFromJobName(jobName)
+               pkgName = self._get_pkgname_from_jobname(jobName)
                # add job to list of registered jobs
                self.currentJobs += [jobName]
 
@@ -75,13 +75,13 @@ class JenkinsBridge:
                    compare = version_compare(regVersion, pkgVersion)
                    if compare >= 0:
                        continue
-               jobIdentifier = pkgName + "_" + self._getArchFromJobName(jobName)
+               jobIdentifier = pkgName + "_" + self._get_arch_from_job_name(jobName)
                self.jobInfoDict[jobIdentifier] = [pkgVersion, jobName]
 
         self.queuedJobs = []
-        self._refreshJobQueueInfo()
+        self._refresh_jobqueue_info()
 
-    def _runSimpleJenkinsCommand(self, options, failOnError=True):
+    def _run_simple_jenkins_command(self, options, failOnError=True):
         p = subprocess.Popen(self.jenkins_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         resLines = ""
         while(True):
@@ -97,16 +97,16 @@ class JenkinsBridge:
 
         return p.returncode, resLines
 
-    def _refreshJobQueueInfo(self):
+    def _refresh_jobqueue_info(self):
         scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/list-queued-jobs.groovy"
-        lines = self._runSimpleJenkinsCommand(["groovy", scriptPath])
+        lines = self._run_simple_jenkins_command(["groovy", scriptPath])
         rawPkgJobLines = lines.splitlines ()
         for jobln in rawPkgJobLines:
-            if self._getVersionFromJobName(jobln) != "":
+            if self.get_version_from_job_name(jobln) != "":
                 self.queuedJobs += [jobln]
 
 
-    def _createJobTemplate(self, pkgname, pkgversion, component, distro, architecture, info=""):
+    def _create_job_template(self, pkgname, pkgversion, component, distro, architecture, info=""):
         # Create the information html
         info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
         if component != "main":
@@ -122,18 +122,18 @@ class JenkinsBridge:
 
         return jobStr
 
-    def getJobName(self, pkgname, version, architecture):
+    def get_job_name(self, pkgname, version, architecture):
         # generate generic job name
         return "pkg+%s_%s_%s" % (pkgname, noEpoch(version), architecture)
 
-    def _getVersionFromJobName(self, jobName):
+    def get_version_from_job_name(self, jobName):
         s = jobName[::-1]
         s = s[s.index("_")+1:]
         s = s[:s.index("_")]
 
         return s[::-1]
 
-    def _getPkgNameFromJobName(self, jobName):
+    def _get_pkgname_from_jobname(self, jobName):
         s = jobName[jobName.index("+")+1:]
         s = s[::-1]
         s = s[s.index("_")+1:]
@@ -141,13 +141,13 @@ class JenkinsBridge:
 
         return s[::-1]
 
-    def _getArchFromJobName(self, jobName):
+    def _get_arch_from_job_name(self, jobName):
         s = jobName[::-1]
         s = s[:s.index("_")]
 
         return s[::-1]
 
-    def _getLastBuildStatus(self, jobName):
+    def _get_last_build_status(self, jobName):
         try:
             jenkinsStream = urllib2.urlopen(self._jenkinsUrl + "/job/%s/lastBuild/api/json" % (jobName))
         except urllib2.HTTPError, e:
@@ -180,7 +180,7 @@ class JenkinsBridge:
             else:
                 return True, buildVersion
 
-    def _renameJob(self, currentName, newName):
+    def _rename_job(self, currentName, newName):
         qs = urllib.urlencode({'newName': newName})
         rename_job_url = self._jenkinsUrl + "/job/%s/doRename?%s" % (currentName, qs)
 
@@ -193,30 +193,30 @@ class JenkinsBridge:
             print("Error post data %s" % rename_job_url)
             raise e
 
-    def setRegisteredPackagesList(self, packagesList):
+    def set_registered_packages_list(self, packagesList):
         self.packagesDBCounter = Counter(packagesList)
 
-    def _createJob(self, jobName, jobXML):
+    def _create_job(self, jobName, jobXML):
         p = subprocess.Popen(self.jenkins_cmd + ["create-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = p.communicate(input=jobXML)
         if p.returncode is not 0:
             raise Exception("Failed adding %s:\n%s" % (jobName, output))
 
-    def _updateJob(self, jobName, jobXML):
+    def _update_job(self, jobName, jobXML):
         p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = p.communicate(input=jobXML)
         if p.returncode is not 0:
             raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
-    def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
+    def create_update_job(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
-        jobName = self.getJobName(pkgname, noEpoch(pkgversion), architecture)
+        jobName = self.get_job_name(pkgname, noEpoch(pkgversion), architecture)
         buildArch = architecture
         if buildArch is "all":
             # we build all arch:all packages on amd64
             buildArch = "amd64"
 
-        jobXML = self._createJobTemplate(pkgname, pkgversion, component, distro, buildArch, info)
+        jobXML = self._create_job_template(pkgname, pkgversion, component, distro, buildArch, info)
         jobIdentifier = pkgname + "_" + architecture
 
         if not jobName in self.currentJobs:
@@ -228,16 +228,16 @@ class JenkinsBridge:
 
                 # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
                 oldJobName = self.jobInfoDict[jobIdentifier][1]
-                self._renameJob(oldJobName, jobName)
+                self._rename_job(oldJobName, jobName)
                 self.currentJobs.remove(oldJobName)
 
-                self._updateJob(jobName, jobXML)
+                self._update_job(jobName, jobXML)
 
                 self.currentJobs += [jobName]
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
                 print("*** Successfully updated job: %s ***" % (jobName))
             else:
-                self._createJob(jobName, jobXML)
+                self._create_job(jobName, jobXML)
 
                 self.currentJobs += [jobName]
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
@@ -251,7 +251,7 @@ class JenkinsBridge:
                     # the version already registered for build is higher or equal to the new one - we skip this package
                     return
                 # check for epoch bump/higher version for some reason
-                success, buildVersion = self._getLastBuildStatus(jobName)
+                success, buildVersion = self._get_last_build_status(jobName)
                 lastVersionBuilt = buildVersion[:buildVersion.index('#')]
                 compare = version_compare(lastVersionBuilt, pkgversion)
                 if compare >= 0:
@@ -259,12 +259,12 @@ class JenkinsBridge:
                     return
 
                 print("INFO: Updating existing job, epoch bump found: %s, %s -> %s" % (jobName, currentPkgVersion, pkgversion))
-                self._updateJob(jobName, jobXML)
+                self._update_job(jobName, jobXML)
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
 
-    def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
+    def schedule_build_if_not_failed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
-        jobName = self.getJobName(pkgname, versionNoEpoch, architecture)
+        jobName = self.get_job_name(pkgname, versionNoEpoch, architecture)
         # if this job is already queued, we don't have to do anything
         if jobName in self.queuedJobs:
             return
@@ -273,7 +273,7 @@ class JenkinsBridge:
             print("INFO: Skipping build request for %s" % (jobName))
             return
 
-        success, buildVersion = self._getLastBuildStatus(jobName)
+        success, buildVersion = self._get_last_build_status(jobName)
 
         # get the last version of the package which has been built (buildVersion without parts after the '#')
         lastVersionBuilt = buildVersion[:buildVersion.index('#')]
@@ -281,6 +281,6 @@ class JenkinsBridge:
 
         if (compare < 0):
             print("*** Requesting build of %s ***" % (jobName))
-            self._runSimpleJenkinsCommand(["build", jobName])
+            self._run_simple_jenkins_command(["build", jobName])
         # since lastBuildStatus returns success for builds in progress and returns the correct build number,
         # we are done here - if versions are equal, the last build was either successful or has failed.

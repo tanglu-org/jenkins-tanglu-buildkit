@@ -55,7 +55,7 @@ class PackageInfoRetriever():
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs += ["all"]
 
-    def _setPkgInstalledForArch(self, dirname, pkg, binaryName):
+    def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
         if "-udeb" in binaryName:
             fileExt = "udeb"
@@ -70,7 +70,7 @@ class PackageInfoRetriever():
                 pkg.installedArchs += [arch]
 
 
-    def _getPackagesFor(self, dist, component):
+    def _get_packages_for(self, dist, component):
         source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
         tagf = TagFile (f)
@@ -97,18 +97,18 @@ class PackageInfoRetriever():
             else:
                 binaryPkgs = [binaries]
             for binaryName in binaryPkgs:
-                self._setPkgInstalledForArch(section["Directory"], pkg, binaryName)
+                self._set_pkg_installed_for_arch(section["Directory"], pkg, binaryName)
                 #if (pkg.installedArchs != ["all"]) or (len(binaryPkgs) <= 0:
 
             packageList += [pkg]
 
         return packageList
 
-    def getAllPackages(self):
+    def get_all_packages(self):
         packageList = []
         for dist in self._archiveDists:
             for comp in self._archiveComponents:
-                packageList += self._getPackagesFor(dist, comp)
+                packageList += self._get_packages_for(dist, comp)
         return packageList
 
 

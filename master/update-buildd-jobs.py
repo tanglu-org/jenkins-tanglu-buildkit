@@ -35,37 +35,37 @@ class BuildJobUpdater:
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
 
-    def syncPackages(self):
-        pkgList = self._pkginfo.getAllPackages()
+    def sync_packages(self):
+        pkgList = self._pkginfo.get_all_packages()
         # generate list of all package names, to make the Jenkins job builder
         # smarter in determining if a package was replaced or is still valid
         pkgNameList = []
         for pkg in pkgList:
-            pkgNameList += [pkg.pkgname]
-        self._jenkins.setRegisteredPackagesList(pkgNameList)
+            pkgNameList.append(pkg.pkgname)
+        self._jenkins.set_registered_packages_list(pkgNameList)
 
         for pkg in pkgList:
             # check if this is an arch:all package
             if pkg.archs == "all":
                  # our package is arch:all, schedule it on amd64 for build
-                 self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
+                 self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
                  if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
-                         self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, "all")
+                         self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
                  continue
 
             for arch in self._supportedArchs:
                 if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
-                    self._jenkins.createUpdateJob(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
+                    self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not arch in pkg.installedArchs:
                         if self.debugMode:
                             print("Package %s not built for %s!" % (pkg.pkgname, arch))
                         if self.scheduleBuilds:
-                            self._jenkins.scheduleBuildIfNotFailed(pkg.pkgname, pkg.version, arch)
+                            self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
 
-    def _getCruftJobs(self):
-        pkgList = self._pkginfo.getAllPackages()
+    def _get_cruft_jobs(self):
+        pkgList = self._pkginfo.get_all_packages()
         jobList = self._jenkins.currentJobs
 
         for pkg in pkgList:
@@ -75,18 +75,18 @@ class BuildJobUpdater:
                 archs = [pkg.archs]
 
             if pkg.archs == "all":
-                jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, "all")
+                jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, "all")
                 if jobName in jobList:
                     jobList.remove(jobName)
             for arch in self._supportedArchs:
                 if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
-                    jobName = self._jenkins.getJobName(pkg.pkgname, pkg.version, arch)
+                    jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, arch)
                     if jobName in jobList:
                         jobList.remove(jobName)
         return jobList
 
-    def cruftReport(self):
-        jobList = self._getCruftJobs()
+    def cruft_report(self):
+        jobList = self._get_cruft_jobs()
         for job in jobList:
             print("Cruft: %s" % (job))
 
@@ -110,10 +110,10 @@ def main():
     if options.update:
         sync = BuildJobUpdater()
         sync.scheduleBuilds = not options.no_build
-        sync.syncPackages()
+        sync.sync_packages()
     elif options.cruft_report:
         sync = BuildJobUpdater()
-        sync.cruftReport()
+        sync.cruft_report()
     else:
         print("Run with -h for a list of available command-line options!")
 
