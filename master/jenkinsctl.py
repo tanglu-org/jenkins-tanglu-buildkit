@@ -202,6 +202,12 @@ class JenkinsBridge:
         if p.returncode is not 0:
             raise Exception("Failed adding %s:\n%s" % (jobName, output))
 
+    def _updateJob(self, jobName, jobXML):
+        p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = p.communicate(input=jobXML)
+        if p.returncode is not 0:
+            raise Exception("Failed updating %s:\n%s" % (jobName, output))
+
     def createUpdateJob(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
         jobName = self.getJobName(pkgname, noEpoch(pkgversion), architecture)
@@ -225,10 +231,7 @@ class JenkinsBridge:
                 self._renameJob(oldJobName, jobName)
                 self.currentJobs.remove(oldJobName)
 
-                p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                output = p.communicate(input=jobXML)
-                if p.returncode is not 0:
-                    raise Exception("Failed updating %s:\n%s" % (jobName, output))
+                self._updateJob(jobName, jobXML)
 
                 self.currentJobs += [jobName]
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
@@ -256,10 +259,7 @@ class JenkinsBridge:
                     return
 
                 print("INFO: Updating existing job, epoch bump found: %s, %s -> %s" % (jobName, currentPkgVersion, pkgversion))
-                p = subprocess.Popen(self.jenkins_cmd + ["update-job", jobName], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-                output = p.communicate(input=jobXML)
-                if p.returncode is not 0:
-                    raise Exception("Failed updating %s:\n%s" % (jobName, output))
+                self._updateJob(jobName, jobXML)
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
 
     def scheduleBuildIfNotFailed(self, pkgname, pkgversion, architecture):
