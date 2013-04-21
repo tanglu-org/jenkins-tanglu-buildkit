@@ -55,8 +55,7 @@ class BuildJobUpdater:
                  continue
 
             for arch in self._supportedArchs:
-                anyArch = "any-"+arch
-                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (anyArch in pkg.archs) (arch in pkg.archs):
+                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (("any-"+arch) in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
                     self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not arch in pkg.installedArchs:
@@ -81,8 +80,7 @@ class BuildJobUpdater:
                 if jobName in jobList:
                     jobList.remove(jobName)
             for arch in self._supportedArchs:
-                anyArch = "any-"+arch
-                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (anyArch in pkg.archs) (arch in pkg.archs):
+                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (("any-"+arch) in pkg.archs) or (arch in pkg.archs):
                     jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, arch)
                     if jobName in jobList:
                         jobList.remove(jobName)
