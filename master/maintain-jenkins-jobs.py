@@ -33,6 +33,19 @@ class BuildJobUpdater:
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
+        self._unsupportedArchs = parser.get('Archive', 'archs_all').split (" ")
+        for arch in self._supportedArchs:
+            self._unsupportedArchs.remove(arch)
+
+    def _filterUnsupportedArchs(self, pkgArchs):
+        if ' ' in pkgArchs:
+            archs = pkgArchs.split(' ')
+        else:
+            archs = [pkgArchs]
+            for uarch in self._unsupportedArchs:
+                if uarch in archs:
+                    archs.remove(uarch)
+        return archs
 
     def sync_packages(self):
         pkgList = self._pkginfo.get_all_packages()
@@ -44,9 +57,10 @@ class BuildJobUpdater:
         self._jenkins.set_registered_packages_list(pkgNameList)
 
         for pkg in pkgList:
+            archs = self._filterUnsupportedArchs(pkg.archs)
+
             # check if this is an arch:all package
-            # TODO: Filter out not-built architectures (armel, kfreebsd-*, etc. to determine arch:all build)
-            if pkg.archs == "all":
+            if archs == ["all"]:
                  # our package is arch:all, schedule it on amd64 for build
                  self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
                  if not 'all' in pkg.installedArchs:
@@ -55,7 +69,7 @@ class BuildJobUpdater:
                  continue
 
             for arch in self._supportedArchs:
-                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (("any-"+arch) in pkg.archs) or (arch in pkg.archs):
+                if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     # we add new packages for our binary architectures
                     self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not arch in pkg.installedArchs:
@@ -69,18 +83,15 @@ class BuildJobUpdater:
         jobList = self._jenkins.currentJobs
 
         for pkg in pkgList:
-            if ' ' in pkg.archs:
-                archs = pkg.archs.split(' ')
-            else:
-                archs = [pkg.archs]
+            archs = self._filterUnsupportedArchs(pkg.archs)
 
-            # TODO: Filter out not-built architectures (armel, kfreebsd-*, etc. to determine arch:all build)
-            if pkg.archs == "all":
+            # check if this is an arch:all package
+            if archs == ["all"]:
                 jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, "all")
                 if jobName in jobList:
                     jobList.remove(jobName)
             for arch in self._supportedArchs:
-                if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (("any-"+arch) in pkg.archs) or (arch in pkg.archs):
+                if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, arch)
                     if jobName in jobList:
                         jobList.remove(jobName)
