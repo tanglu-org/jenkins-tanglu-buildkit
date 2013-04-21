@@ -208,6 +208,11 @@ class JenkinsBridge:
         if p.returncode is not 0:
             raise Exception("Failed updating %s:\n%s" % (jobName, output))
 
+    def delete_job(self, jobName):
+        code, outputLines = self._run_simple_jenkins_command(["delete-job", jobName], False)
+        if (code != 0):
+            raise Exception("Unable to delete job!\n%s" % (outputLines))
+
     def create_update_job(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
         jobName = self.get_job_name(pkgname, noEpoch(pkgversion), architecture)

@@ -102,6 +102,13 @@ class BuildJobUpdater:
         for job in jobList:
             print("Cruft: %s" % (job))
 
+    def cruft_remove(self):
+        jobList = self._get_cruft_jobs()
+        for job in jobList:
+            print("Deleting cruft job: %s" % (job))
+            self._jenkins.delete_job(job)
+            print("Done.")
+
 def main():
     # init Apt, we need it later
     apt_pkg.init()
@@ -110,12 +117,15 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
-    parser.add_option("--cruft-report",
-                  action="store_true", dest="cruft_report", default=False,
-                  help="report jobs without matching package")
     parser.add_option("--nobuild",
                   action="store_true", dest="no_build", default=False,
                   help="don't schedule any builds")
+    parser.add_option("--cruft-report",
+                  action="store_true", dest="cruft_report", default=False,
+                  help="report jobs without matching package")
+    parser.add_option("--cruft-remove",
+                  action="store_true", dest="cruft_remove", default=False,
+                  help="delete jobs without matching source package.")
 
     (options, args) = parser.parse_args()
 
@@ -126,6 +136,9 @@ def main():
     elif options.cruft_report:
         sync = BuildJobUpdater()
         sync.cruft_report()
+    elif options.cruft_remove:
+        sync = BuildJobUpdater()
+        sync.cruft_remove()
     else:
         print("Run with -h for a list of available command-line options!")
 
