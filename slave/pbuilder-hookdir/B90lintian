@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+install_packages() {
+    apt-get -y "${APTGETOPT[@]}" install "$@"
+}
+
+install_packages lintian
+
+echo "+++ lintian output +++"
+
+su -c "lintian -I --show-overrides /tmp/buildd/*.changes; :" - pbuilder
+
+echo "+++ end of lintian output +++"
