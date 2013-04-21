@@ -12,6 +12,9 @@ if [ ! -f debian/tests/control ]; then
   exit 0
 fi
 
+echo "IMPORTANT: Autopkgtest is currently DISABLED on buildds!"
+exit 0
+
 if [ ! -f debian/files ]; then
   echo "Package source is not built, debian/files is missing" >&2
   exit 1
