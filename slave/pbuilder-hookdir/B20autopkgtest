@@ -1,6 +1,7 @@
 #!/bin/sh
 # Copyright 2013 Michael Prokop <mika@debian.org>
 # Copyright 2012 Christoph Berg <myon@debian.org>
+# Copyright 2013 Matthias Klumpp <mak@debian.org>
 # Licensed under the terms of the MIT License.
 
 set -ex
@@ -12,8 +13,10 @@ if [ ! -f debian/tests/control ]; then
   exit 0
 fi
 
-echo "IMPORTANT: Autopkgtest is currently DISABLED on buildds!"
-exit 0
+if [ -z "${autopkgtest_enabled:-}" ] || "${autopkgtest_enabled:-}" = "no" ]; then
+  echo "NOTE: Autopkgtest is currently DISABLED for this build!"
+  exit 0
+fi
 
 if [ ! -f debian/files ]; then
   echo "Package source is not built, debian/files is missing" >&2
