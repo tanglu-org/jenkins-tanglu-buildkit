@@ -17,7 +17,8 @@ install_slave: $(scripts)
 	install -m 0775 slave/pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 
 install_master: $(scripts)
-	echo "Nothing to do!"
+	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
+	ln -s ./master/maintain-jenkins-index /usr/bin/maintain-jenkins-index
 
 install: install_master install_slave
 

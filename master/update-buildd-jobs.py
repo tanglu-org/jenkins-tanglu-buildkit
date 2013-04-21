@@ -46,6 +46,7 @@ class BuildJobUpdater:
 
         for pkg in pkgList:
             # check if this is an arch:all package
+            # TODO: Wilter out not-built architectures (armel, kfreebsd-*, etc. to determine arch:all build)
             if pkg.archs == "all":
                  # our package is arch:all, schedule it on amd64 for build
                  self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
@@ -55,6 +56,7 @@ class BuildJobUpdater:
                  continue
 
             for arch in self._supportedArchs:
+                # TODO Handle i386-any version ID's ;-)
                 if ('any' in pkg.archs) or ('linux-any' in pkg.archs) or (arch in pkg.archs):
                     # we add new packages for our binary architectures
                     self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
@@ -74,6 +76,7 @@ class BuildJobUpdater:
             else:
                 archs = [pkg.archs]
 
+            # TODO: Wilter out not-built architectures (armel, kfreebsd-*, etc. to determine arch:all build)
             if pkg.archs == "all":
                 jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, "all")
                 if jobName in jobList:
