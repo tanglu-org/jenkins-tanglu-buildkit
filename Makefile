@@ -18,7 +18,7 @@ install_slave: $(scripts)
 
 install_master: $(scripts)
 	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
-	ln -s ./master/maintain-jenkins-index /usr/bin/maintain-jenkins-index
+	ln -s ./master/maintain-jenkins-jobs.py /usr/bin/maintain-jenkins-index
 
 install: install_master install_slave
 
