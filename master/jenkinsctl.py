@@ -238,7 +238,7 @@ class JenkinsBridge:
 
                 self._update_job(jobName, jobXML)
 
-                self.currentJobs += [jobName]
+                self.currentJobs.append(jobName)
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
                 print("*** Successfully updated job: %s ***" % (jobName))
             else:

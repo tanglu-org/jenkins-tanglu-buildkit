@@ -64,7 +64,9 @@ class BuildJobUpdater:
                  # our package is arch:all, schedule it on amd64 for build
                  ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
                  if not ret:
-                        print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+                        if self.debugMode:
+                            print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+                        continue
                  if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
                          self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
@@ -75,7 +77,9 @@ class BuildJobUpdater:
                     # we add new packages for our binary architectures
                     ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
                     if not ret:
-                        print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+                        if self.debugMode:
+                            print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+                        continue
                     if not arch in pkg.installedArchs:
                         if self.debugMode:
                             print("Package %s not built for %s!" % (pkg.pkgname, arch))
