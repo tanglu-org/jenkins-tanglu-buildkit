@@ -67,7 +67,7 @@ class PackageInfoRetriever():
             expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
             if os.path.isfile(expectedPackagePath):
-                pkg.installedArchs += [arch]
+                pkg.installedArchs.append(arch)
 
 
     def _get_packages_for(self, dist, component):
@@ -110,5 +110,3 @@ class PackageInfoRetriever():
             for comp in self._archiveComponents:
                 packageList += self._get_packages_for(dist, comp)
         return packageList
-
-

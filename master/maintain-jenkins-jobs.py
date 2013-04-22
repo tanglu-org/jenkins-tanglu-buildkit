@@ -62,7 +62,9 @@ class BuildJobUpdater:
             # check if this is an arch:all package
             if archs == ["all"]:
                  # our package is arch:all, schedule it on amd64 for build
-                 self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
+                 ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
+                 if not ret:
+                        print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
                  if not 'all' in pkg.installedArchs:
                      if self.scheduleBuilds:
                          self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
@@ -71,7 +73,9 @@ class BuildJobUpdater:
             for arch in self._supportedArchs:
                 if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     # we add new packages for our binary architectures
-                    self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
+                    ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
+                    if not ret:
+                        print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
                     if not arch in pkg.installedArchs:
                         if self.debugMode:
                             print("Package %s not built for %s!" % (pkg.pkgname, arch))

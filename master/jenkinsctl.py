@@ -229,7 +229,7 @@ class JenkinsBridge:
                 compare = version_compare(self.jobInfoDict[jobIdentifier][0], pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - no need for an update
-                    return
+                    return False
 
                 # we get the old job name, rename it and update it - by doing this, we preserve the existing job statistics
                 oldJobName = self.jobInfoDict[jobIdentifier][1]
@@ -254,18 +254,20 @@ class JenkinsBridge:
                 compare = version_compare(currentPkgVersion, pkgversion)
                 if compare >= 0:
                     # the version already registered for build is higher or equal to the new one - we skip this package
-                    return
+                    return False
                 # check for epoch bump/higher version for some reason
                 success, buildVersion = self._get_last_build_status(jobName)
                 lastVersionBuilt = buildVersion[:buildVersion.index('#')]
                 compare = version_compare(lastVersionBuilt, pkgversion)
                 if compare >= 0:
                     # apparently no epoch bump
-                    return
+                    return False
 
                 print("INFO: Updating existing job, epoch bump found: %s, %s -> %s" % (jobName, currentPkgVersion, pkgversion))
                 self._update_job(jobName, jobXML)
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
+
+        return True
 
     def schedule_build_if_not_failed(self, pkgname, pkgversion, architecture):
         versionNoEpoch = noEpoch(pkgversion)
