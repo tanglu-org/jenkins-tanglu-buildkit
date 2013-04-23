@@ -181,6 +181,8 @@ class JenkinsBridge:
                 return True, buildVersion
 
     def _rename_job(self, currentName, newName):
+        # TODO: We can't rename a job with a running build - fix that somehow by skipping that job until it was built,
+        # or better abort the build, rename the job and restart it.
         qs = urllib.urlencode({'newName': newName})
         rename_job_url = self._jenkinsUrl + "/job/%s/doRename?%s" % (currentName, qs)
 
