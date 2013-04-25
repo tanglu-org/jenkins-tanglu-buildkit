@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.debian.PackageUpload
+Exec=/usr/bin/package-upload-service
