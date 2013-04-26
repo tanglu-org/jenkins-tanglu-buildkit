@@ -17,6 +17,7 @@ install_slave: $(scripts)
 	install -m 0775 slave/pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 
 	# upload service
+	mkdir -p $(DESTDIR)/usr/share/buildkit/uploader/
 	install -m 0775 slave/upload-service/package-upload-service.py $(DESTDIR)/usr/share/buildkit/uploader/
 	install -m 0775 slave/upload-service/request-package-upload.py $(DESTDIR)/usr/share/buildkit/uploader/
 	ln -sf $(DESTDIR)/usr/share/buildkit/uploader/request-package-upload.py /usr/bin/request-package-upload
