@@ -18,6 +18,7 @@
 
 import dbus
 import sys
+import os
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -25,8 +26,8 @@ if __name__ == "__main__":
         exit(1)
     u_location = sys.argv[1]
     u_changesfile = sys.argv[2]
-    print (u_location + " ## " + u_changesfile)
+    print("Requesting upload of %s to %s." % (os.path.basename(u_changesfile), u_location))
     bus = dbus.SystemBus()
     uploadservice = bus.get_object('org.debian.PackageUpload', '/org/debian/packageupload')
     trigger_upload = uploadservice.get_dbus_method('trigger_upload', 'org.debian.PackageUpload')
-    trigger_upload(u_location, u_changesfile)
+    trigger_upload(u_location, os.path.abspath(u_changesfile))
