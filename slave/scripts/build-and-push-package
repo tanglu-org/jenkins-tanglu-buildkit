@@ -349,16 +349,25 @@ sign_result() {
   debsign "${WORKSPACE}/binaries/"*.changes $key_cmd --no-re-sign
 }
 
-# copy results to dput directory
-submit_build() {
-  cp "${WORKSPACE}/binaries/"* "${OUTGOING_DIR}/"
-}
-
 # make them available for the Jenkin's 'Archiving artifacts'
 binaries_to_workspace() {
   echo "*** Moving binaries files to workspace. ***"
   mv "${WORKSPACE}/binaries/"* "${WORKSPACE}/"
   rmdir "${WORKSPACE}/binaries/"
+}
+
+# copy results to dput directory
+request_build_upload() {
+  count=`ls -1 *.changes 2>/dev/null | wc -l`
+  if [ $count == 0 ]
+  then
+    echo "*** There are no files to upload! ***"
+  fi
+
+  for changesfile in "${WORKSPACE}/"*.changes
+  do
+    request-package-upload tanglu-ftpmaster $changesfile
+  done
 }
 
 # main execution
@@ -376,9 +385,10 @@ cowbuilder_init
 cowbuilder_run
 
 sign_result
-submit_build
 
 binaries_to_workspace
+request_build_upload
+
 autopkgtest_results
 
 bailout 0
