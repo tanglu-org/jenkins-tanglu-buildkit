@@ -23,6 +23,8 @@ from gi.repository import GObject, GLib
 from collections import deque
 import subprocess
 import multiprocessing
+import logging
+import time
 
 class UploadService(dbus.service.Object):
     def __init__(self):
@@ -31,16 +33,32 @@ class UploadService(dbus.service.Object):
 
         self._uploadQueue = deque()
         self._uploadRunning = False
-        #self._timer = GLib.Timer()
+        GLib.timeout_add_seconds(60, self._check_for_inactivity)
+        self._last_action_timestamp = time.time()
+        self._loop = GObject.MainLoop()
+        self._loop.run()
+
+    def _check_for_inactivity(self):
+        logger.debug("Checking for inactivity")
+        timestamp = self._last_action_timestamp
+        if (not self._uploadRunning and
+                not GLib.main_context_default().pending() and
+                time.time() - timestamp > (4 * 60) and
+                not self.queue):
+            logger.info("Quitting due to inactivity")
+            self._loop.quit()
+            return False
+        return True
 
     def _popenAndCall(self, popenArgs, onExit):
         def runInThread(popenArgs, onExit):
             self._uploadRunning = True
-            print("OPEN")
             proc = subprocess.Popen(popenArgs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc.wait()
             self._uploadRunning = False
-            print(proc.communicate())
+            if proc.returncode != 0:
+                print("Upload failed!")
+                logger.warning("Upload failed (cmd: %s): %s" % (popenArgs, proc.communicate()))
             onExit()
             return
         thread = multiprocessing.Process(target=runInThread, args=(popenArgs, onExit))
@@ -56,6 +74,7 @@ class UploadService(dbus.service.Object):
             return
         item = self._uploadQueue.popleft()
         print("Doing upload of: %s" % (item[1]))
+        self._last_action_timestamp = time.time()
         self._popenAndCall(['dput', item[0], item[1]], self._run_package_upload)
 
 
@@ -71,7 +90,12 @@ class UploadService(dbus.service.Object):
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger('upload-service')
+    hdlr = logging.FileHandler('/srv/buildd/logs/upload-service.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.WARNING)
+
     DBusGMainLoop(set_as_default=True)
     service = UploadService()
-    loop = GObject.MainLoop()
-    loop.run()

@@ -16,9 +16,15 @@ install_slave: $(scripts)
 	mkdir -p $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 	install -m 0775 slave/pbuilder-hookdir/* $(DESTDIR)/usr/share/jenkins-debian-glue/pbuilder-hookdir/
 
+	# upload service
+	install -m 0775 slave/upload-service/package-upload-service.py $(DESTDIR)/usr/share/buildkit/uploader/
+	install -m 0775 slave/upload-service/request-package-upload.py $(DESTDIR)/usr/share/buildkit/uploader/
+	ln -sf $(DESTDIR)/usr/share/buildkit/uploader/request-package-upload.py /usr/bin/request-package-upload
+	install -m 0775 slave/upload-service/org.debian.PackageUpload.service /usr/share/dbus-1/services/
+
 install_master: $(scripts)
 	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
-	ln -sf $(shell readlink -f ./master/maintain-jenkins-jobs.py) /usr/bin/maintain-jenkins-jobs
+	ln -sf $(shell readlink -f ./master/maintain-jenkins-jobs.py) $(DESTDIR)/usr/bin/maintain-jenkins-jobs
 
 install: install_master install_slave
 
