@@ -20,7 +20,6 @@ install_slave: $(scripts)
 	mkdir -p $(DESTDIR)/usr/share/buildkit/uploader/
 	install -m 0775 slave/upload-service/package-upload-service.py $(DESTDIR)/usr/share/buildkit/uploader/
 	install -m 0775 slave/upload-service/request-package-upload.py $(DESTDIR)/usr/share/buildkit/uploader/
-	install -m 0775 slave/upload-service/run_dbus_session.sh $(DESTDIR)/usr/share/buildkit/uploader/
 	ln -sf $(DESTDIR)/usr/share/buildkit/uploader/request-package-upload.py /usr/bin/request-package-upload
 	install -m 0775 slave/upload-service/org.debian.PackageUpload.service /usr/share/dbus-1/system-services/
 

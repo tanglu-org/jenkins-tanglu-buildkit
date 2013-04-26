@@ -3,7 +3,7 @@
 === 1. Install dependencies ===
 On your newly installed Debian Wheezy machine, install the buildd dependencies:
 
- apt-get install sudo default-jre cowbuilder devscripts dpkg-dev eatmydata python-dbus dbus-x11
+ apt-get install sudo default-jre cowbuilder devscripts dpkg-dev eatmydata python-dbus
 
 Then install the Tanglu Archive Keyring and the Tanglu debootstrap:
 wget:
