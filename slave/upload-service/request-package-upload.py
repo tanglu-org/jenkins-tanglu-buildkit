@@ -18,8 +18,6 @@
 
 import dbus
 import sys
-import os
-import subprocess
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -27,13 +25,8 @@ if __name__ == "__main__":
         exit(1)
     u_location = sys.argv[1]
     u_changesfile = sys.argv[2]
-
-    # ensure we have a session bus
-    proc = subprocess.Popen([os.path.dirname(os.path.realpath(__file__)) + "/run_dbus_session.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc.wait()
-
     print (u_location + " ## " + u_changesfile)
-    bus = dbus.SessionBus()
+    bus = dbus.SystemBus()
     uploadservice = bus.get_object('org.debian.PackageUpload', '/org/debian/packageupload')
     trigger_upload = uploadservice.get_dbus_method('trigger_upload', 'org.debian.PackageUpload')
     trigger_upload(u_location, u_changesfile)
