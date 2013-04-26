@@ -28,6 +28,8 @@ Create new buildd user:
 Give it sudo permission by creating /etc/sudoers.d/buildd with content:
  buildd ALL=NOPASSWD: /usr/sbin/cowbuilder, /usr/sbin/chroot
 
+NOTE: The user name and HOME path are currently hardcoded in some scripts, so please don't change them.
+
 === 4. Generate builder key ===
 Login as buildd (su buildd)
 Use gpg --gen-key to create a new key. Select RSA(4) and a length of 4096 bit.
@@ -50,9 +52,8 @@ Move /etc/jenkins/debian_glue.example to /etc/jenkins/debian_glue and change the
 You will have to set DEBEMAIL to the mail address you used for the GPG key before.
 Also, set KEY_ID to the ID of your GPG-key.
 
-Create the outgoing and log directories:
+Create the log directory:
 mkdir /srv/buildd/logs
-mkdir /srv/buildd/outgoing
 
 === 8. Configure dput ===
 Login as buildd, create ~/.dput.cf with the following content:
