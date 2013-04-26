@@ -1,3 +1,4 @@
 [D-BUS Service]
 Name=org.debian.PackageUpload
 Exec=/usr/share/buildkit/uploader/package-upload-service.py
+User=buildd
