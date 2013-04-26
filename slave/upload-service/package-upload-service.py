@@ -90,6 +90,10 @@ class UploadService(dbus.service.Object):
 
 
 if __name__ == "__main__":
+    # ensure we have a session bus
+    proc = subprocess.Popen([os.path.dirname(os.path.realpath(__file__)) + "/run_dbus_session.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.wait()
+
     logger = logging.getLogger('upload-service')
     hdlr = logging.FileHandler('/srv/buildd/logs/upload-service.log')
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')

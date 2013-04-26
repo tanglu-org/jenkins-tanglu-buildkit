@@ -22,7 +22,6 @@ install_slave: $(scripts)
 	install -m 0775 slave/upload-service/request-package-upload.py $(DESTDIR)/usr/share/buildkit/uploader/
 	ln -sf $(DESTDIR)/usr/share/buildkit/uploader/request-package-upload.py /usr/bin/request-package-upload
 	install -m 0775 slave/upload-service/org.debian.PackageUpload.service /usr/share/dbus-1/services/
-	install -m 0775 slave/upload-service/create_dbus_session_bus.sh /etc/profile.d/
 
 install_master: $(scripts)
 	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
