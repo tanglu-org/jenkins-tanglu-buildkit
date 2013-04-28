@@ -63,18 +63,6 @@ build-and-push-package
         </hudson.plugins.warnings.ConsoleParser>
       </consoleParsers>
     </hudson.plugins.warnings.WarningsPublisher>
-    <hudson.plugins.ircbot.IrcPublisher plugin="ircbot@2.22">
-      <targets class="empty-list"/>
-      <strategy>ANY_FAILURE</strategy>
-      <notifyOnBuildStart>false</notifyOnBuildStart>
-      <notifySuspects>false</notifySuspects>
-      <notifyCulprits>false</notifyCulprits>
-      <notifyFixers>false</notifyFixers>
-      <notifyUpstreamCommitters>false</notifyUpstreamCommitters>
-      <buildToChatNotifier class="hudson.plugins.im.build_notify.SummaryOnlyBuildToChatNotifier" plugin="instant-messaging@1.25"/>
-      <matrixMultiplier>ONLY_CONFIGURATIONS</matrixMultiplier>
-      <channels/>
-    </hudson.plugins.ircbot.IrcPublisher>
   </publishers>
 
   <buildWrappers>
