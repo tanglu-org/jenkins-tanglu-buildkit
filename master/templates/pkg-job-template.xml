@@ -30,10 +30,11 @@ build-and-push-package
 
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>*.deb,*.udeb,*.dsc,*.changes</artifacts>
+      <artifacts>*.dsc,*.changes,*.upload</artifacts>
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
+
     <hudson.plugins.warnings.WarningsPublisher plugin="warnings@4.25">
       <healthy></healthy>
       <unHealthy></unHealthy>
@@ -63,6 +64,17 @@ build-and-push-package
         </hudson.plugins.warnings.ConsoleParser>
       </consoleParsers>
     </hudson.plugins.warnings.WarningsPublisher>
+
+    <com.chikli.hudson.plugin.naginator.NaginatorPublisher plugin="naginator@1.8">
+      <regexpForRerun>.*(E: Some index files failed to download).*</regexpForRerun>
+      <rerunIfUnstable>true</rerunIfUnstable>
+      <checkRegexp>true</checkRegexp>
+      <delay class="com.chikli.hudson.plugin.naginator.ProgressiveDelay">
+        <increment>5</increment>
+        <max>30</max>
+      </delay>
+      <maxSchedule>4</maxSchedule>
+    </com.chikli.hudson.plugin.naginator.NaginatorPublisher>
   </publishers>
 
   <buildWrappers>
