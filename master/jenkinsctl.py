@@ -218,12 +218,13 @@ class JenkinsBridge:
     def create_update_job(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
         # get name of the job
         jobName = self.get_job_name(pkgname, noEpoch(pkgversion), architecture)
-        buildArch = architecture
-        if buildArch is "all":
+        # NOTE: This is now solved through Jenkins, but we might revert this change later (or not, if it works great :P)
+        #buildArch = architecture
+        #if buildArch is "all":
             # we build all arch:all packages on amd64
-            buildArch = "amd64"
+            #buildArch = "amd64"
 
-        jobXML = self._create_job_template(pkgname, pkgversion, component, distro, buildArch, info)
+        jobXML = self._create_job_template(pkgname, pkgversion, component, distro, architecture, info)
         jobIdentifier = pkgname + "_" + architecture
 
         if not jobName in self.currentJobs:
