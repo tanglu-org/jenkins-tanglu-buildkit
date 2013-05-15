@@ -55,11 +55,11 @@ class UploadService(dbus.service.Object):
             self._uploadRunning = True
             proc = subprocess.Popen(popenArgs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc.wait()
-            self._uploadRunning = False
             if proc.returncode != 0:
                 print("Upload failed!")
                 stdout, stderr = proc.communicate()
                 logger.warning("Upload failed (cmd: %s): %s %s" % (popenArgs, stdout, stderr))
+            self._uploadRunning = False
             onExit()
             return
         thread = multiprocessing.Process(target=runInThread, args=(popenArgs, onExit))

@@ -19,7 +19,7 @@
 import gzip
 import os.path
 from ConfigParser import SafeConfigParser
-from apt_pkg import TagFile, TagSection
+from apt_pkg import TagFile, TagSection, version_compare
 
 def noEpoch(version):
     v = version
@@ -36,7 +36,10 @@ class PackageInfo():
         self.component = component
         self.archs = archs
         self.info = ""
+        self.build_depends = ""
+        self.build_conflicts = ""
         self.installedArchs = []
+        self.archs_str = ""
 
     def getVersionNoEpoch(self):
         return noEpoch(self.version)
@@ -70,7 +73,7 @@ class PackageInfoRetriever():
                 pkg.installedArchs.append(arch)
 
 
-    def _get_packages_for(self, dist, component):
+    def get_packages_for(self, dist, component):
         source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
         tagf = TagFile (f)
@@ -88,6 +91,11 @@ class PackageInfoRetriever():
 
             pkg.info = ("Package: %s\nBinary Packages: %s\nMaintainer: %s\nCo-Maintainers: %s\nVCS-Browser: %s" %
                         (pkgname, binaries, section['Maintainer'], section.get('Uploaders', 'Nobody'), section.get('Vcs-Browser', 'None set')))
+
+            # values needed for build-dependency solving
+            pkg.build_depends = section.get['Build-Depends', '']
+            pkg.build_conflicts = section.get['Build-Conflicts', '']
+            pkg.archs_str = archs
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture
             # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
@@ -108,5 +116,17 @@ class PackageInfoRetriever():
         packageList = []
         for dist in self._archiveDists:
             for comp in self._archiveComponents:
-                packageList += self._get_packages_for(dist, comp)
+                packageList += self.get_packages_for(dist, comp)
         return packageList
+
+    def package_list_to_dict(self, pkg_list):
+        pkg_dict = {}
+        for pkg in pkg_list:
+            # replace it only if the version of the new item is higher (required to handle epoch bumps and new uploads)
+            if pkg.pkgname in pkg_dict:
+                regVersion = pkg_dict[pkg.pkgname]
+                compare = version_compare(regVersion, pkg.version)
+                if compare >= 0:
+                    continue
+            pkg_dict[pkg.name] = pkg
+        return pkg_dict
