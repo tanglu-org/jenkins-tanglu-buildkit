@@ -52,7 +52,8 @@ class BuildCheck:
         pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
         pl.append('Architecture: %s\n' % (arch))
 
-        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg.pkgname], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pkg_list = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
+        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg_list], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate(input=''.join(pl))
         output = "%s\n%s" % (stdout, stderr)
         if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
