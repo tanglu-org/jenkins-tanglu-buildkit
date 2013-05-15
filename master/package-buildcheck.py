@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from apt_pkg import TagFile
+import apt_pkg
 from optparse import OptionParser
 import tempfile
 from ConfigParser import SafeConfigParser
