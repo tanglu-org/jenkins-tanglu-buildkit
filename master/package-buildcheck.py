@@ -38,21 +38,21 @@ class BuildCheck:
     # NOTE: We obviously want to create a cache of this and rebuild it only every 1-2h, so
     # not every Jenkins job requests ends up in unpacking the whole archive index twice.
     def _run_edos_builddebcheck(self, dist, comp, pkg, arch):
-        # write fake package-info for edos-builddebcheck
-        f = tempfile.NamedTemporaryFile(mode ='w+t', prefix="edos-bdcpkg")
-        f.write('Package: %s\n' % (pkg.pkgname))
-        f.write('Version: %s\n' % (pkg.version))
-        f.write('Build-Depends: %s\n' % (pkg.build_depends))
-        f.write('Build-Conflicts: %s\n' % (pkg.build_conflicts))
-        f.write('Architecture: %s\n' % (arch))
-        f.flush()
-
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
-        print("DEBUG: using %s and %s" % (f.name, archive_binary_index_path))
 
-        proc = subprocess.Popen(["edos-builddebcheck", "-be", "-a", arch, archive_binary_index_path, f.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        proc.wait()
-        stdout, stderr = proc.communicate()
+        # write fake package-info for edos-debcheck
+        f = gzip.open(archive_binary_index_path, 'rb')
+        pl = f.readlines()
+        pl.append("")
+        pl.append('Package: %s\n' % (pkg.pkgname))
+        pl.append('Version: %s\n' % (pkg.version))
+        pl.append('Depends: %s\n' % (pkg.build_depends))
+        pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
+        pl.append('Architecture: %s\n' % (arch))
+
+        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg.pkgname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #proc.wait()
+        stdout, stderr = proc.communicate(input='\n'.join(pl))
         output = "%s\n%s" % (stdout, stderr)
         if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
             return False, output
