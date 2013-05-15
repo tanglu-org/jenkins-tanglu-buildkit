@@ -93,8 +93,8 @@ class PackageInfoRetriever():
                         (pkgname, binaries, section['Maintainer'], section.get('Uploaders', 'Nobody'), section.get('Vcs-Browser', 'None set')))
 
             # values needed for build-dependency solving
-            pkg.build_depends = section.get['Build-Depends', '']
-            pkg.build_conflicts = section.get['Build-Conflicts', '']
+            pkg.build_depends = section.get('Build-Depends', '')
+            pkg.build_conflicts = section.get('Build-Conflicts', '')
             pkg.archs_str = archs
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture

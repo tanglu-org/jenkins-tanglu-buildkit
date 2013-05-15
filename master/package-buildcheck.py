@@ -18,6 +18,7 @@
 
 import os
 import apt_pkg
+import sys
 from optparse import OptionParser
 import tempfile
 from ConfigParser import SafeConfigParser
@@ -89,7 +90,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if options.check:
-        if len(args) != 2:
+        if len(args) != 4:
             print("Invalid number of arguments (need dist, component, package-name, arch)")
             sys.exit(6)
         dist = args[0]
