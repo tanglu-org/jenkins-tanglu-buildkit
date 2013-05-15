@@ -27,6 +27,8 @@ from ConfigParser import SafeConfigParser
 
 from pkginfo import *
 
+SRC_PKG_PREFIX = "source+"
+
 class BuildCheck:
     def __init__(self):
         self._pkginfo = PackageInfoRetriever()
@@ -44,15 +46,14 @@ class BuildCheck:
         f = gzip.open(archive_binary_index_path, 'rb')
         pl = f.readlines()
         pl.append("")
-        pl.append('Package: %s\n' % (pkg.pkgname))
+        pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
         pl.append('Version: %s\n' % (pkg.version))
         pl.append('Depends: %s\n' % (pkg.build_depends))
         pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
         pl.append('Architecture: %s\n' % (arch))
 
-        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg.pkgname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #proc.wait()
-        stdout, stderr = proc.communicate(input='\n'.join(pl))
+        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg.pkgname], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate(input=''.join(pl))
         output = "%s\n%s" % (stdout, stderr)
         if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
             return False, output
