@@ -73,7 +73,7 @@ class BuildCheck:
         if not arch in src_pkg.installedArchs:
             ret, info = self._run_edos_builddebcheck(dist, component, src_pkg, arch)
             if not ret:
-                print("Package '%s' has unsatisfiable dependencies:\n%s" % (package_name, info))
+                print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, info))
                 # return code 8, which means dependency-wait
                 return 8
             else:
