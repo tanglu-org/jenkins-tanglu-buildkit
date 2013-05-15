@@ -64,22 +64,14 @@ method = ftp
 incoming = ~/incoming/
 login = anonymous
 
-=== 9. Create cronjob ===
-As buildd user, create a new crontab (crontab -e) with the following contents:
-
-# Edit this file to introduce tasks to be run by cron.
-#
-# m h  dom mon dow   command
-0 0-23/1 * * * /usr/bin/tanglu-upload-runner
-
-=== 10. Add ssh key ===
+=== 9. Add ssh key ===
 As user buildd, edit ~/.ssh/authorized_keys and add the following content:
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/vbEIRu4YOgQfMYZ9anR+t5WlEsqDeYmI0+sAsdYcnec0WfWppSDdHwBrO4KCMEmV5BnvzS4/yVQM9Ib56kmGYl5Kb4Qc0fBHKZDY6n5oozXdFdFPKTjwXFfku1QZjr6FU7gTPywiciTNQzB/5IRqr6BXdsTRGiodJe8Gp7Trq4bKJSANdybvaZ4quWOojd3e0kZ7Xa8cVJh2vHuLtMD1rMl37qDrwTo9pUtXkJxNpd/shJrcO+NfhB2BVEDNGf4gD4OWBQNLFsGoZfeqtOzr54AQeM2abWyx0R4lFCkCCQGaQfLytHc1pjuI7ZPeubDCDz2+1Rs2QliFNbR4Cywn buildmaster@buildd.tanglu.org
 
 (one line)
 This will make the buildd accessible by the build-master.
 
-=== 11. Register the buildd ===
+=== 10. Register the buildd ===
 Tell the build-master admin (currently Matthias Klumpp <mak@debian.org>) about the new buildd and give him access to the machine.
 The build-master admin will check the generic settings and perform a testbuild, then add the machine to the buildd pool and register it's key
 with the archive kit.
