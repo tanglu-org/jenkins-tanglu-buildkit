@@ -124,9 +124,9 @@ class PackageInfoRetriever():
         for pkg in pkg_list:
             # replace it only if the version of the new item is higher (required to handle epoch bumps and new uploads)
             if pkg.pkgname in pkg_dict:
-                regVersion = pkg_dict[pkg.pkgname]
+                regVersion = pkg_dict[pkg.pkgname].version
                 compare = version_compare(regVersion, pkg.version)
                 if compare >= 0:
                     continue
-            pkg_dict[pkg.name] = pkg
+            pkg_dict[pkg.pkgname] = pkg
         return pkg_dict

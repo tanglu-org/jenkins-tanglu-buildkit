@@ -19,9 +19,11 @@
 import os
 import apt_pkg
 import sys
-from optparse import OptionParser
 import tempfile
+import subprocess
+from optparse import OptionParser
 from ConfigParser import SafeConfigParser
+
 
 from pkginfo import *
 
@@ -33,24 +35,26 @@ class BuildCheck:
         path = parser.get('Archive', 'path')
         self._archive_path = path
 
+    # NOTE: We obviously want to create a cache of this and rebuild it only every 1-2h, so
+    # not every Jenkins job requests ends up in unpacking the whole archive index twice.
     def _run_edos_builddebcheck(self, dist, comp, pkg, arch):
         # write fake package-info for edos-builddebcheck
-        f = tempfile.NamedTemporaryFile(mode ='w+t', prefix="edos-bdc-pkg")
+        f = tempfile.NamedTemporaryFile(mode ='w+t', prefix="edos-bdcpkg")
         f.write('Package: %s\n' % (pkg.pkgname))
         f.write('Version: %s\n' % (pkg.version))
-        f.write('Depends: %s\n' % (pkg.build_depends))
-        f.write('Conflicts: %s\n' % (pkg.build_conflicts))
-        f.write('Architecture: %s\n' % (pkg.arch))
+        f.write('Build-Depends: %s\n' % (pkg.build_depends))
+        f.write('Build-Conflicts: %s\n' % (pkg.build_conflicts))
+        f.write('Architecture: %s\n' % (arch))
         f.flush()
 
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
         print("DEBUG: using %s and %s" % (f.name, archive_binary_index_path))
 
-        proc = subprocess.Popen(["edos-builddebcheck", archive_binary_index_path, f.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["edos-builddebcheck", "-be", "-a", arch, archive_binary_index_path, f.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
         stdout, stderr = proc.communicate()
         output = "%s\n%s" % (stdout, stderr)
-        if (proc.returncode != 0) or ("FAILED" in output):
+        if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
             return False, output
         return True, output
 
@@ -63,10 +67,10 @@ class BuildCheck:
         if package_name not in pkg_dict:
             print("Package %s was not found in %s!" % (package_name, dist))
             return 1
-        src_pkg = pkg[package_name]
+        src_pkg = pkg_dict[package_name]
 
         if not arch in src_pkg.installedArchs:
-            ret, info = _run_edos_builddebcheck(dist, component, src_pkg, arch)
+            ret, info = self._run_edos_builddebcheck(dist, component, src_pkg, arch)
             if not ret:
                 print("Package '%s' has unsatisfiable dependencies:\n%s" % (package_name, info))
                 # return code 8, which means dependency-wait
@@ -99,6 +103,10 @@ def main():
         arch = args[3]
         bc = BuildCheck()
         code = bc.check_build(dist, comp, package_name, arch)
+        if code == 1:
+            print("There is no need to build this package.")
+        if code == 0:
+            print("We should (re)build this package.")
         sys.exit(code)
     else:
         print("Run with -h for a list of available command-line options!")
