@@ -27,7 +27,7 @@ class BuildJobUpdater:
     def __init__(self):
         self._jenkins = JenkinsBridge()
         self._pkginfo = PackageInfoRetriever()
-        self.scheduleBuilds = True
+        self.scheduleBuilds = False
         self.debugMode = False
 
         parser = SafeConfigParser()
@@ -125,9 +125,9 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
-    parser.add_option("--nobuild",
-                  action="store_true", dest="no_build", default=False,
-                  help="don't schedule any builds")
+    parser.add_option("--build",
+                  action="store_true", dest="build", default=False,
+                  help="schedule builds for not-built packages")
     parser.add_option("--cruft-report",
                   action="store_true", dest="cruft_report", default=False,
                   help="report jobs without matching package")
@@ -139,7 +139,7 @@ def main():
 
     if options.update:
         sync = BuildJobUpdater()
-        sync.scheduleBuilds = not options.no_build
+        sync.scheduleBuilds = options.build
         sync.sync_packages()
     elif options.cruft_report:
         sync = BuildJobUpdater()
