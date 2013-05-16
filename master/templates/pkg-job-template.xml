@@ -39,7 +39,7 @@ lastVersionBuilt = &quot;Unknown&quot;;
 build = project.getLastBuild()
 if (build != null) {
     lastVersionBuilt = build.getDisplayName();
-    lastVersionBuilt = desc.substring(0, desc.indexOf(&apos;#&apos;));
+    lastVersionBuilt = lastVersionBuilt.substring(0, lastVersionBuilt.indexOf(&apos;#&apos;));
 }
 
 // we only need to run a build-check if we haven&apos;t already built the current version
