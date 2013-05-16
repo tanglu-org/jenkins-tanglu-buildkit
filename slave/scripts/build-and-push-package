@@ -109,7 +109,7 @@ identify_sourcefile() {
   fi
 
   echo "*** Identifying newest package version ***"
-  newest_version="0"
+  newest_version="0~"
 
   for file in "${BASE_PATH}/"*.dsc ; do
     SOURCE_PACKAGE="$(awk '/^Source: / {print $2}' $file)"
