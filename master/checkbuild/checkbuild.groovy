@@ -51,14 +51,20 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (jobVersion == lastVersionBuilt)
 		return false;
 
-	// prepare change of the project notes (in description)
+	// prepare change of the project notes (in description of the matrix axes)
 	desc = buildConfig.getDescription();
 	if ((desc == null) || (desc.isEmpty()))
 		desc = "Build configuration of ${package_name} on ${arch}<br/>";
 
 	sep_idx = desc.indexOf('<br/>----');
 	if (sep_idx > 0)
-		desc = desc.substring(0, sep_idx)
+		desc = desc.substring(0, sep_idx);
+
+	// prepare change of main project description
+	pdesc = project.getDescription();
+	p_sep_idx = pdesc.indexOf('<br/>----');
+	if (p_sep_idx > 0)
+		pdesc = pdesc.substring(0, sep_idx);
 
 	// check for the different return codes
 	build_project = false;
@@ -66,12 +72,23 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (code == 0) {
 		desc = desc + '<br/>----<br/><br/>There are no notes about this build.'
 		build_project = true;
+
+		// reset the main description, if necessary (only reset it if no arch is in DEPWAIT anymore)
+		if ((pdesc.indexOf("Status: DEPWAIT (${arch})") >= 0) || (pdesc.indexOf("Status: DEPWAIT") <= 0)) {
+			pdesc = pdesc + '<br/>----<br/><br>There are no notes about this package.';
+			project.setDescription(pdesc);
+		}
 	} else if (code == 8) {
 		// we are waiting for depedencies
 		desc = desc + '<br/>----<br/>' + proc.in.text.replaceAll('\n', '<br/>');
+		// add an information to the main project description too
+
+		pdesc = pdesc + '<br/>----<br/><br/>Status: DEPWAIT (${arch})';
+		project.setDescription(pdesc);
+
 		build_project = false;
 	} else {
-		desc = desc + '<br/>----<br/><br>There are no notes about this build.'
+		desc = desc + '<br/>----<br/><br>There are no notes about this build.';
 	}
 
 	buildConfig.setDescription(desc);
