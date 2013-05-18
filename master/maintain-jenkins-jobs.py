@@ -33,10 +33,11 @@ class BuildJobUpdater:
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
-        self._supportedArchs.append("all")
         self._unsupportedArchs = parser.get('Archive', 'archs_all').split (" ")
         for arch in self._supportedArchs:
             self._unsupportedArchs.remove(arch)
+        # we always support arch:all
+        self._supportedArchs.append("all")
 
     def _filterUnsupportedArchs(self, pkgArchs):
         if ' ' in pkgArchs:

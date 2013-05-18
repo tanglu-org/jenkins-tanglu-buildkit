@@ -56,7 +56,7 @@ class PackageInfoRetriever():
         self._archiveComponents = parser.get('Archive', 'components').split (" ")
         self._archiveDists = parser.get('Archive', 'dists').split (" ")
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
-        self._supportedArchs += ["all"]
+        self._supportedArchs.append("all")
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
