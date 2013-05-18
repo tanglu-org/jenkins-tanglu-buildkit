@@ -64,7 +64,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	pdesc = project.getDescription();
 	p_sep_idx = pdesc.indexOf('<br/>----');
 	if (p_sep_idx > 0)
-		pdesc = pdesc.substring(0, sep_idx);
+		pdesc = pdesc.substring(0, p_sep_idx);
 
 	// check for the different return codes
 	build_project = false;
@@ -115,26 +115,26 @@ def check_and_schedule_job (project) {
 
 	projectData = masterDesc.substring(masterDesc.indexOf('Identifier:'), );
 
-		for (arch in archList) {
-			if (project.getItem("Architecture=arch-${arch}") == null)
-				continue;
-			if (perform_buildcheck (dist, comp, pkg_name, arch)) {
-				println("Going to build ${pkg_name} on ${arch}");
+	for (arch in archList) {
+		if (project.getItem("Architecture=arch-${arch}") == null)
+			continue;
+		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
+			println("Going to build ${pkg_name} on ${arch}");
 
-				//mbuild = new matrix.MatrixBuild(project);
-				raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
-				//raction.setBaseBuildNumber(mbuild.getNumber());
-				raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
+			//mbuild = new matrix.MatrixBuild(project);
+			raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
+			//raction.setBaseBuildNumber(mbuild.getNumber());
+			raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
 
-				Hudson.getInstance().getQueue().schedule(project,
-										8,
-										raction);
+			Hudson.getInstance().getQueue().schedule(project,
+									8,
+									raction);
 
-				//buildConfig.scheduleBuild2(8,
-				//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),
-				//                         raction);
-			}
+			//buildConfig.scheduleBuild2(8,
+			//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),
+			//                         raction);
 		}
+	}
 }
 
 //********//
