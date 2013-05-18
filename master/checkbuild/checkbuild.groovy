@@ -84,10 +84,10 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 		}
 	} else if (code == 8) {
 		// we are waiting for depedencies
-		desc = desc + '<br/>----<br/>' + proc.in.text.replaceAll('\n', '<br/>');
+		desc = desc + "<br/>----<br/>" + proc.in.text.replaceAll('\n', "<br/>");
 		// add an information to the main project description too
 
-		pdesc = pdesc + '<br/>----<br/><br/>Status: DEPWAIT (${arch})';
+		pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
 		project.setDescription(pdesc);
 
 		build_project = false;
@@ -111,7 +111,7 @@ def check_and_schedule_job (project) {
 
 	projectData = match[0][1];
 	pieces = projectData.stripMargin().split();
-	println("Using project data: ${pieces}");
+	//! println("Using project data: ${pieces}");
 
 	dist = pieces[0];
 	comp = pieces[1];
