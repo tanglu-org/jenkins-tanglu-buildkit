@@ -122,7 +122,7 @@ def check_and_schedule_job (project) {
 	qitems = queue.getItems();
 	scheduled_jobs = [];
 	for (qitem in qitems)
-        	scheduled_jobs.append(item.task.getFullDisplayName());
+        	scheduled_jobs.add(item.task.getFullDisplayName());
 
 	for (arch in archList) {
 		if (project.getItem("Architecture=arch-${arch}") == null)
@@ -156,7 +156,7 @@ allItems = jenkinsInstance.items;
 
 nonbuilt_pkgs = [];
 new File('/srv/dak/queue/needsbuild.list').eachLine { line ->
-	nonbuilt_pkgs.append("pkg+" + line);
+	nonbuilt_pkgs.add("pkg+" + line);
 }
 
 for (item in allItems) {
