@@ -46,15 +46,14 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	build_project = false;
 	code = proc.exitValue();
 	if (code == 0) {
-		println("Rebuild!");
-		desc = desc + '<br/>----<br/><br/>No notes about this build exist.'
+		desc = desc + '<br/>----<br/><br/>There are no notes about this build.'
 		build_project = true;
 	} else if (code == 8) {
 		// we are waiting for depedencies
 		desc = desc + '<br/>----<br/>' + proc.in.text.replaceAll('\n', '<br/>');
 		build_project = false;
 	} else {
-		desc = desc + '<br/>----<br/><br>No notes about this build exist.'
+		desc = desc + '<br/>----<br/><br>There are no notes about this build.'
 	}
 
 	buildConfig.setDescription(desc);
@@ -64,12 +63,13 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 def check_and_schedule_job (project) {
 	masterDesc = project.getDescription();
-	def pattern = "Identifier:(.*)<br/>";
-	if (masterDesc !=~ pattern) {
+
+	def match = masterDesc =~ "Identifier:(.*)<br/>";
+	if (!match.find()) {
 		println("ATTENTION: No data found for job ${project.getName()}! Skipping it.");
 		return;
 	}
-	def match = masterDesc =~ pattern;
+
 	projectData = match[0][1];
 	pieces = projectData.stripMargin().split();
 	println("Using project data: ${pieces}");
@@ -82,7 +82,7 @@ def check_and_schedule_job (project) {
 
 		for (arch in archList) {
 			if (perform_buildcheck (dist, comp, pkg_name, arch)) {
-				println("Going to build gnome-packagekit on ${arch}");
+				println("Going to build ${pkg_name} on ${arch}");
 
 				//mbuild = new matrix.MatrixBuild(project);
 				raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
@@ -113,8 +113,9 @@ for (item in allItems) {
 		continue;
 
 	if (!project.getClass().equals(matrix.MatrixProject)) {
-		println("ATTENTION!!! Detected project ${project.getName()} which is no matrix project! We cannot continue.");
+		//println("ATTENTION!!! Detected project ${project.getName()} which is no matrix project! We cannot continue.");
 		continue;
 	}
+  println("Detected project ${project.getName()}...");
 	check_and_schedule_job(project);
 }
