@@ -94,6 +94,7 @@ class BuildJobUpdater:
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
+
                     needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
                     #if self.scheduleBuilds:
                     #    self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)

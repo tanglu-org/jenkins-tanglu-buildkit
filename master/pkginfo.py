@@ -71,6 +71,15 @@ class PackageInfoRetriever():
 
             if os.path.isfile(expectedPackagePath):
                 pkg.installedArchs.append(arch)
+                continue
+            # NOTE: Temporary hack to catch at least a few binNMUs which were binary-synced from Debian
+            # RegEx to catch binNMUs: re.match(r".*\+b\d$", "1.0+b1")
+            # FIXME: This code needs to be rewritten, probably by scanning the binary-file database instead of the directory
+            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch() + "+b1", arch, fileExt)
+            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
+            if os.path.isfile(expectedPackagePath):
+                pkg.installedArchs.append(arch)
+                continue
 
 
     def get_packages_for(self, dist, component):
