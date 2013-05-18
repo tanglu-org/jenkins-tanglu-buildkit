@@ -18,6 +18,10 @@
 
 // determine which packages should be built amd issue build requests
 
+import jenkins.*
+import jenkins.model.*
+import hudson.*
+import hudson.model.*
 jenkinsInstance = hudson.model.Hudson.instance
 
 archList = ["all", "amd64", "i386"];
