@@ -156,7 +156,7 @@ allItems = jenkinsInstance.items;
 
 nonbuilt_pkgs = [];
 new File('/srv/dak/queue/needsbuild.list').eachLine { line ->
-	nonbuilt_pkgs.append("pkg+${line}");
+	nonbuilt_pkgs.append("pkg+" + line);
 }
 
 for (item in allItems) {

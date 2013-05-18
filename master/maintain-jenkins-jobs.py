@@ -90,13 +90,14 @@ class BuildJobUpdater:
                 if self.debugMode:
                         print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
 
-            for (arch in pkgArchs):
+            for arch in pkgArchs:
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
-                    if self.scheduleBuilds:
-                        needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
-                        #self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
+                    needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
+                    #if self.scheduleBuilds:
+                    #    self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
+        needsbuild_list.close()
 
     def _get_cruft_jobs(self):
         pkgList = self._pkginfo.get_all_packages()
