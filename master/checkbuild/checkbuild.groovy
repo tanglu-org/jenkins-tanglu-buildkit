@@ -20,7 +20,7 @@
 
 jenkinsInstance = hudson.model.Hudson.instance
 
-archList = ["amd64", "i386"];
+archList = ["all", "amd64", "i386"];
 
 def perform_buildcheck (dist, comp, package_name, arch) {
 	// check if we should build this package
@@ -116,6 +116,8 @@ def check_and_schedule_job (project) {
 	projectData = masterDesc.substring(masterDesc.indexOf('Identifier:'), );
 
 		for (arch in archList) {
+			if (project.getItem("Architecture=arch-${arch}") == null)
+				continue;
 			if (perform_buildcheck (dist, comp, pkg_name, arch)) {
 				println("Going to build ${pkg_name} on ${arch}");
 
