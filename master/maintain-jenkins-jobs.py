@@ -33,6 +33,7 @@ class BuildJobUpdater:
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
+        self._supportedArchs.append("all")
         self._unsupportedArchs = parser.get('Archive', 'archs_all').split (" ")
         for arch in self._supportedArchs:
             self._unsupportedArchs.remove(arch)
