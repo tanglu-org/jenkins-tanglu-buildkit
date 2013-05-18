@@ -119,20 +119,30 @@ def check_and_schedule_job (project) {
 
 	projectData = masterDesc.substring(masterDesc.indexOf('Identifier:'), );
 
+	// the build queue
+	queue = Hudson.getInstance().getQueue();
+	qitems = queue.getItems();
+	scheduled_jobs = [];
+	for (qitem in qitems)
+        	scheduled_jobs.append(item.task.getFullDisplayName());
+
 	for (arch in archList) {
 		if (project.getItem("Architecture=arch-${arch}") == null)
 			continue;
 		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
-			println("Going to build ${pkg_name} on ${arch}");
+			jobName = project.getName();
+			if ("${jobName} » arch-${arch}" in scheduled_jobs) {
+				println("Skipping ${pkg_name} on ${arch}, already in queue.")
+			} else {
+				println("Going to build ${pkg_name} on ${arch}");
+			}
 
 			//mbuild = new matrix.MatrixBuild(project);
 			raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
 			//raction.setBaseBuildNumber(mbuild.getNumber());
 			raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
 
-			Hudson.getInstance().getQueue().schedule(project,
-									8,
-									raction);
+			queue.schedule(project, 8, raction);
 
 			//buildConfig.scheduleBuild2(8,
 			//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),
