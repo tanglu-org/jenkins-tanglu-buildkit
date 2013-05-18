@@ -77,6 +77,10 @@ class BuildJobUpdater:
                 if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     pkgArchs.append(arch)
 
+            if len(pkgArchs) <= 0:
+                print("Skipping job %s %s on %s, no architectures found!" % (pkg.pkgname, pkg.version, pkg.dist))
+                continue
+            print(pkgArchs)
             ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, pkgArchs, pkg.info)
             if not ret:
                 if self.debugMode:

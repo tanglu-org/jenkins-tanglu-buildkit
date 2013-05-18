@@ -117,6 +117,9 @@ class JenkinsBridge:
         for arch in architectures:
             archs_xml += "<string>arch-" + arch + "</string>\n"
 
+        if archs_xml == "":
+            raise Exception("Job for %s %s on %s has no architectures! This should never happen!" % (pkgname, pkgversion, distro))
+
         jobStr = self._jobTemplateStr.replace("{{architectures_xml}}", archs_xml)
         jobStr = jobStr.replace("{{distroname}}", escape(distro))
         jobStr = jobStr.replace("{{component}}", component)
