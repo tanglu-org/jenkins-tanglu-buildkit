@@ -117,8 +117,6 @@ def check_and_schedule_job (project) {
 	comp = pieces[1];
 	pkg_name = pieces[2];
 
-	projectData = masterDesc.substring(masterDesc.indexOf('Identifier:'), );
-
 	// the build queue
 	queue = Hudson.getInstance().getQueue();
 	qitems = queue.getItems();
@@ -156,6 +154,11 @@ def check_and_schedule_job (project) {
 
 allItems = jenkinsInstance.items;
 
+nonbuilt_pkgs = [];
+new File('/srv/dak/queue/needsbuild.list').eachLine { line ->
+	nonbuilt_pkgs.append("pkg+${line}");
+}
+
 for (item in allItems) {
 	project = null;
 	if (item.getName().startsWith("pkg+"))
@@ -168,5 +171,6 @@ for (item in allItems) {
 		continue;
 	}
 
-	check_and_schedule_job(project);
+	if (project.getName() in nonbuilt_pkgs)
+		check_and_schedule_job(project);
 }
