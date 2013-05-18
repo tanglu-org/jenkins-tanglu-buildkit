@@ -1,4 +1,22 @@
-// determine of a package should be built
+/* Copyright (C) 2013 Matthias Klumpp <mak@debian.org>
+*
+* Licensed under the GNU General Public License Version 3
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// determine which packages should be built amd issue build requests
 
 jenkinsInstance = hudson.model.Hudson.instance
 
@@ -113,9 +131,9 @@ for (item in allItems) {
 		continue;
 
 	if (!project.getClass().equals(matrix.MatrixProject)) {
-		//println("ATTENTION!!! Detected project ${project.getName()} which is no matrix project! We cannot continue.");
+		println("ATTENTION!!! Detected project ${project.getName()} which is no matrix project! We cannot continue.");
 		continue;
 	}
-  println("Detected project ${project.getName()}...");
+
 	check_and_schedule_job(project);
 }
