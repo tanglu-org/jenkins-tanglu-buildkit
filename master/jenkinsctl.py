@@ -103,7 +103,7 @@ class JenkinsBridge:
         rawPkgJobLines = lines.splitlines ()
         for jobln in rawPkgJobLines:
             if self.get_version_from_job_name(jobln) != "":
-                self.queuedJobs += [jobln]
+                self.queuedJobs.append(jobln)
 
 
     def _create_job_template(self, pkgname, pkgversion, component, distro, architectures, info=""):
@@ -128,22 +128,19 @@ class JenkinsBridge:
 
     def get_job_name(self, pkgname, version):
         # generate generic job name
-        return "pkg+%s_%s_%s" % (pkgname, noEpoch(version))
+        return "pkg+%s_%s" % (pkgname, noEpoch(version))
 
     def get_version_from_job_name(self, jobName):
         s = jobName[::-1]
-        s = s[s.index("_")+1:]
         s = s[:s.index("_")]
 
         return s[::-1]
 
     def _get_pkgname_from_jobname(self, jobName):
         s = jobName[jobName.index("+")+1:]
-        s = s[::-1]
-        s = s[s.index("_")+1:]
-        s = s[s.index("_")+1:]
+        s = s[:s.index("_")]
 
-        return s[::-1]
+        return s
 
     def _get_last_build_status(self, jobName):
         try:
