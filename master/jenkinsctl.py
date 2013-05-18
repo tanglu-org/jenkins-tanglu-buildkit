@@ -294,6 +294,6 @@ class JenkinsBridge:
         p = subprocess.Popen(self.jenkins_cmd + ["groovy", scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while(True):
           retcode = p.poll()
-          print(p.stdout.readline())
+          sys.stdout.write(p.stdout.readline())
           if (retcode is not None):
               break
