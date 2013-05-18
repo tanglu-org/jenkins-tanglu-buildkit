@@ -287,3 +287,13 @@ class JenkinsBridge:
             self._run_simple_jenkins_command(["build", jobName])
         # since lastBuildStatus returns success for builds in progress and returns the correct build number,
         # we are done here - if versions are equal, the last build was either successful or has failed.
+
+    def checkbuild(self):
+        scriptPath = os.path.dirname(os.path.realpath(__file__)) + "/checkbuild/checkbuild.groovy"
+
+        p = subprocess.Popen(self.jenkins_cmd + ["groovy", scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        while(True):
+          retcode = p.poll()
+          print(p.stdout.readline())
+          if (retcode is not None):
+              break

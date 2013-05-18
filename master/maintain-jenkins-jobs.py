@@ -97,8 +97,6 @@ class BuildJobUpdater:
         jobList = self._jenkins.currentJobs
 
         for pkg in pkgList:
-            archs = self._filterUnsupportedArchs(pkg.archs)
-
             # check if this is an arch:all package
             jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version)
             if jobName in jobList:
@@ -118,6 +116,9 @@ class BuildJobUpdater:
             self._jenkins.delete_job(job)
             print("Done.")
 
+    def checkbuild(self):
+        self._jenkins.checkbuild()
+
 def main():
     # init Apt, we need it later
     apt_pkg.init()
@@ -126,6 +127,9 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
+    parser.add_option("--checkbuild",
+                  action="store_true", dest="checkbuild", default=False,
+                  help="check if packages need to be build and schedule builds if possible")
   #  parser.add_option("--build",
   #                action="store_true", dest="build", default=False,
   #                help="schedule builds for not-built packages")
@@ -142,6 +146,9 @@ def main():
         sync = BuildJobUpdater()
         #sync.scheduleBuilds = options.build
         sync.sync_packages()
+    elif options.checkbuild:
+        sync = BuildJobUpdater()
+        sync.checkbuild()
     elif options.cruft_report:
         sync = BuildJobUpdater()
         sync.cruft_report()
