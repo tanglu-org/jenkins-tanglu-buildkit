@@ -62,7 +62,7 @@ class BuildJobUpdater:
             # check if this is an arch:all package
             if archs == ["all"]:
                  # our package is arch:all, schedule it on amd64 for build
-                 ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, "all", pkg.info)
+                 ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, ["all"], pkg.info)
                  if not ret:
                         if self.debugMode:
                             print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
@@ -72,19 +72,21 @@ class BuildJobUpdater:
                          self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
                  continue
 
+            pkgArchs = []
             for arch in self._supportedArchs:
                 if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
-                    # we add new packages for our binary architectures
-                    ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, arch, pkg.info)
-                    if not ret:
-                        if self.debugMode:
-                            print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
-                        continue
-                    if not arch in pkg.installedArchs:
-                        if self.debugMode:
-                            print("Package %s not built for %s!" % (pkg.pkgname, arch))
-                        if self.scheduleBuilds:
-                            self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
+                    pkgArchs.append(arch)
+
+            ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, pkgArchs, pkg.info)
+            if not ret:
+                if self.debugMode:
+                        print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+
+         #           if not arch in pkg.installedArchs:
+         #               if self.debugMode:
+         #                   print("Package %s not built for %s!" % (pkg.pkgname, arch))
+         #               if self.scheduleBuilds:
+         #                   self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
 
     def _get_cruft_jobs(self):
         pkgList = self._pkginfo.get_all_packages()
@@ -94,15 +96,10 @@ class BuildJobUpdater:
             archs = self._filterUnsupportedArchs(pkg.archs)
 
             # check if this is an arch:all package
-            if archs == ["all"]:
-                jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, "all")
-                if jobName in jobList:
-                    jobList.remove(jobName)
-            for arch in self._supportedArchs:
-                if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
-                    jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version, arch)
-                    if jobName in jobList:
-                        jobList.remove(jobName)
+            jobName = self._jenkins.get_job_name(pkg.pkgname, pkg.version)
+            if jobName in jobList:
+                jobList.remove(jobName)
+
         return jobList
 
     def cruft_report(self):
@@ -125,9 +122,9 @@ def main():
     parser.add_option("-u", "--update",
                   action="store_true", dest="update", default=False,
                   help="syncronize Jenkins with archive contents")
-    parser.add_option("--build",
-                  action="store_true", dest="build", default=False,
-                  help="schedule builds for not-built packages")
+  #  parser.add_option("--build",
+  #                action="store_true", dest="build", default=False,
+  #                help="schedule builds for not-built packages")
     parser.add_option("--cruft-report",
                   action="store_true", dest="cruft_report", default=False,
                   help="report jobs without matching package")
@@ -139,7 +136,7 @@ def main():
 
     if options.update:
         sync = BuildJobUpdater()
-        sync.scheduleBuilds = options.build
+        #sync.scheduleBuilds = options.build
         sync.sync_packages()
     elif options.cruft_report:
         sync = BuildJobUpdater()

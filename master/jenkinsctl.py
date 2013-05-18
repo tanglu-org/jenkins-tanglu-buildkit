@@ -75,7 +75,7 @@ class JenkinsBridge:
                    compare = version_compare(regVersion, pkgVersion)
                    if compare >= 0:
                        continue
-               jobIdentifier = pkgName + "_" + self._get_arch_from_job_name(jobName)
+               jobIdentifier = pkgName
                self.jobInfoDict[jobIdentifier] = [pkgVersion, jobName]
 
         self.queuedJobs = []
@@ -106,14 +106,18 @@ class JenkinsBridge:
                 self.queuedJobs += [jobln]
 
 
-    def _create_job_template(self, pkgname, pkgversion, component, distro, architecture, info=""):
+    def _create_job_template(self, pkgname, pkgversion, component, distro, architectures, info=""):
         # Create the information html
         info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
         if component != "main":
             info_html = info_html + "<br/><br/><strong>This package is part of the <em>%s</em> depertment!</strong>" % (component)
         info_html = info_html + "<br/><br/>"
 
-        jobStr = self._jobTemplateStr.replace("{{architecture}}", architecture)
+        archs_xml = ""
+        for arch in architectures:
+            archs_xml += "<string>arch-" + arch + "</string>\n"
+
+        jobStr = self._jobTemplateStr.replace("{{architectures_xml}}", archs_xml)
         jobStr = jobStr.replace("{{distroname}}", escape(distro))
         jobStr = jobStr.replace("{{component}}", component)
         jobStr = jobStr.replace("{{pkgname}}", pkgname)
@@ -122,9 +126,9 @@ class JenkinsBridge:
 
         return jobStr
 
-    def get_job_name(self, pkgname, version, architecture):
+    def get_job_name(self, pkgname, version):
         # generate generic job name
-        return "pkg+%s_%s_%s" % (pkgname, noEpoch(version), architecture)
+        return "pkg+%s_%s_%s" % (pkgname, noEpoch(version))
 
     def get_version_from_job_name(self, jobName):
         s = jobName[::-1]
@@ -138,12 +142,6 @@ class JenkinsBridge:
         s = s[::-1]
         s = s[s.index("_")+1:]
         s = s[s.index("_")+1:]
-
-        return s[::-1]
-
-    def _get_arch_from_job_name(self, jobName):
-        s = jobName[::-1]
-        s = s[:s.index("_")]
 
         return s[::-1]
 
@@ -215,17 +213,12 @@ class JenkinsBridge:
         if (code != 0):
             raise Exception("Unable to delete job!\n%s" % (outputLines))
 
-    def create_update_job(self, pkgname, pkgversion, component, distro, architecture, info="", alwaysRename=True):
+    def create_update_job(self, pkgname, pkgversion, component, distro, architectures, info="", alwaysRename=True):
         # get name of the job
-        jobName = self.get_job_name(pkgname, noEpoch(pkgversion), architecture)
-        # NOTE: This is now solved through Jenkins, but we might revert this change later (or not, if it works great :P)
-        #buildArch = architecture
-        #if buildArch is "all":
-            # we build all arch:all packages on amd64
-            #buildArch = "amd64"
+        jobName = self.get_job_name(pkgname, noEpoch(pkgversion))
 
-        jobXML = self._create_job_template(pkgname, pkgversion, component, distro, architecture, info)
-        jobIdentifier = pkgname + "_" + architecture
+        jobXML = self._create_job_template(pkgname, pkgversion, component, distro, architectures, info)
+        jobIdentifier = pkgname
 
         if not jobName in self.currentJobs:
             if ((alwaysRename) or (self.packagesDBCounter[pkgname] == 1)) and (jobIdentifier in self.jobInfoDict.keys()):
@@ -272,9 +265,9 @@ class JenkinsBridge:
 
         return True
 
-    def schedule_build_if_not_failed(self, pkgname, pkgversion, architecture):
+    def schedule_build_if_not_failed(self, pkgname, pkgversion):
         versionNoEpoch = noEpoch(pkgversion)
-        jobName = self.get_job_name(pkgname, versionNoEpoch, architecture)
+        jobName = self.get_job_name(pkgname, versionNoEpoch)
         # if this job is already queued, we don't have to do anything
         if jobName in self.queuedJobs:
             return
