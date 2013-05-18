@@ -27,11 +27,6 @@ jenkinsInstance = hudson.model.Hudson.instance
 archList = ["all", "amd64", "i386"];
 
 def perform_buildcheck (dist, comp, package_name, arch) {
-	// check if we should build this package
-	def command = """package-buildcheck -c ${dist} ${comp} ${package_name} ${arch}""";
-	def proc = command.execute();
-	proc.waitFor();
-
 	buildConfig = project.getItem("Architecture=arch-${arch}");
 	if (buildConfig == null) {
 		println("ERROR: Build configuration for architecture ${arch} was NULL!");
@@ -54,6 +49,11 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	// we only need to run a build-check if we haven't already built the current version
 	if (jobVersion == lastVersionBuilt)
 		return false;
+
+	// check if we should build this package (if all dependencies are in place)
+	def command = """package-buildcheck -c ${dist} ${comp} ${package_name} ${arch}""";
+	def proc = command.execute();
+	proc.waitFor();
 
 	// prepare change of the project notes (in description of the matrix axes)
 	desc = buildConfig.getDescription();
