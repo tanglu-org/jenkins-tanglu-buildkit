@@ -79,7 +79,7 @@ class BuildJobUpdater:
             for arch in self._supportedArchs:
                 if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     pkgArchs.append(arch)
-            if "all" in archs:
+            if ("all" in archs):
                     pkgArchs.append("all")
 
             if len(pkgArchs) <= 0:
@@ -90,9 +90,9 @@ class BuildJobUpdater:
             if not ret:
                 if self.debugMode:
                         print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
+                continue
 
             for arch in pkgArchs:
-                if 
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
