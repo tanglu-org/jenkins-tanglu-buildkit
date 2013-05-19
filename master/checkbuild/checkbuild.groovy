@@ -134,17 +134,34 @@ def check_and_schedule_job (project) {
 	comp = pieces[1];
 	pkg_name = pieces[2];
 
+	projectArchs = [];
+	buildArchs = [];
+
 	for (arch in archList) {
 		if (project.getItem("Architecture=arch-${arch}") == null)
 			continue;
+		projectArchs.add(arch);
 		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
 			jobName = project.getName();
 			if ("${jobName} » arch-${arch}" in scheduled_jobs) {
-				println("Skipping ${pkg_name} on ${arch}, already in queue.")
+				println("Skipping ${pkg_name} on ${arch}, already in queue.");
+				continue;
 			} else {
-				println("Going to build ${pkg_name} on ${arch}");
+				
 			}
 
+			// add arch to to-be-built archlist
+			buildArchs.add(arch);
+		}
+	}
+
+	if (buildArchs.equals(projectArchs)) {
+		// this means we can build the whole project!
+		println("Going to build ${pkg_name} (complete rebuild)");
+		queue.schedule(project, 8);
+	} else {
+		for (arch in buildArchs) {
+			println("Going to build ${pkg_name} on ${arch}");
 			//mbuild = new matrix.MatrixBuild(project);
 			raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
 			//raction.setBaseBuildNumber(mbuild.getNumber());
