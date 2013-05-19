@@ -72,6 +72,7 @@ class BuildJobUpdater:
                             print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
                         continue
                  if not 'all' in pkg.installedArchs:
+                     needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
                      if self.scheduleBuilds:
                          self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
                  continue
@@ -94,7 +95,7 @@ class BuildJobUpdater:
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
-
+                    print("Pkg: %s, arch %s vs. %s" % (pkg.pkgname, arch, pkg.installedArchs))
                     needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
                     #if self.scheduleBuilds:
                     #    self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
