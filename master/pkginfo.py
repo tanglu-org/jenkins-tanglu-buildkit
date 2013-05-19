@@ -18,6 +18,7 @@
 
 import gzip
 import os.path
+import re
 from ConfigParser import SafeConfigParser
 from apt_pkg import TagFile, TagSection, version_compare
 
@@ -72,6 +73,12 @@ class PackageInfoRetriever():
             if pkg_id in self._installedPkgs:
                 pkg.installedArchs.append(arch)
                 continue
+
+            # try to catch binNMUed packages from Debian
+            for pkgid in self._installedPkgs:
+                if re.match(re.escape(pkg_id) + "\+b\d$", pkgid):
+                    pkg.installedArchs.append(arch)
+                    continue
 
             # if package was not in cache, ensure that it is missing by checking the archive directly
             binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
