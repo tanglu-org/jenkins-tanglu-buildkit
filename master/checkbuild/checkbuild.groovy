@@ -29,7 +29,7 @@ queue = Hudson.getInstance().getQueue();
 qitems = queue.getItems();
 scheduled_jobs = [];
 for (qitem in qitems)
-       	scheduled_jobs.add(item.task.getFullDisplayName());
+       	scheduled_jobs.add(qitem.task.getFullDisplayName());
 
 archList = ["all", "amd64", "i386"];
 
