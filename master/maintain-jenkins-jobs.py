@@ -36,8 +36,6 @@ class BuildJobUpdater:
         self._unsupportedArchs = parser.get('Archive', 'archs_all').split (" ")
         for arch in self._supportedArchs:
             self._unsupportedArchs.remove(arch)
-        # we always support arch:all
-        self._supportedArchs.append("all")
 
     def _filterUnsupportedArchs(self, pkgArchs):
         if ' ' in pkgArchs:
@@ -81,6 +79,8 @@ class BuildJobUpdater:
             for arch in self._supportedArchs:
                 if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs):
                     pkgArchs.append(arch)
+            if "all" in archs:
+                    pkgArchs.append("all")
 
             if len(pkgArchs) <= 0:
                 print("Skipping job %s %s on %s, no architectures found!" % (pkg.pkgname, pkg.version, pkg.dist))
@@ -92,6 +92,7 @@ class BuildJobUpdater:
                         print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
 
             for arch in pkgArchs:
+                if 
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
