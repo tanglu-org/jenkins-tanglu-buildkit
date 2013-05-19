@@ -27,9 +27,26 @@ jenkinsInstance = hudson.model.Hudson.instance
 // the build queue
 queue = Hudson.getInstance().getQueue();
 qitems = queue.getItems();
+// we cache all currently running stuff, so nothing gets scheduled twice
 scheduled_jobs = [];
-for (qitem in qitems)
-       	scheduled_jobs.add(qitem.task.getFullDisplayName());
+for (qitem in qitems) {
+	if (qitem.task.getClass().equals(matrix.MatrixConfiguration)) {
+    		job = qitem.task;
+      	 	scheduled_jobs.add(job.getParent().getName());
+ 	}
+}
+  
+for (Computer computer : Hudson.getInstance().getComputers()) {
+	for (Executor executor : computer.getExecutors()) {
+		currentExecutable = executor.getCurrentExecutable();
+		if (currentExecutable != null) {
+			job = currentExecutable.getParent().getOwnerTask();
+			if (job.getClass().equals(matrix.MatrixConfiguration))
+				scheduled_jobs.add(job.getParent().getName());
+		}
+	}
+}
+
 
 archList = ["all", "amd64", "i386"];
 
@@ -106,6 +123,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 			pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
 		}	
 		project.setDescription(pdesc);
+		println("Job ${project.getName()} is in depwait on ${arch}.");
 
 		build_project = false;
 	} else {
@@ -143,8 +161,8 @@ def check_and_schedule_job (project) {
 		projectArchs.add(arch);
 		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
 			jobName = project.getName();
-			if ("${jobName} » arch-${arch}" in scheduled_jobs) {
-				println("Skipping ${pkg_name} on ${arch}, already in queue.");
+			if (jobName in scheduled_jobs) {
+				println("Skipping ${pkg_name} (on ${arch}), a package job is already in queue.");
 				continue;
 			} else {
 				
