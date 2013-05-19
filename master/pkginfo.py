@@ -57,6 +57,7 @@ class PackageInfoRetriever():
         self._archiveDists = parser.get('Archive', 'dists').split (" ")
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs.append("all")
+        self._installedPkgs = []
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
@@ -66,23 +67,24 @@ class PackageInfoRetriever():
         for arch in self._supportedArchs:
             if arch in pkg.installedArchs:
                 continue
+            # test the caches
+            pkg_id = "%s_%s_%s" % (binaryName, pkg.version, arch)
+            if pkg_id in self._installedPkgs:
+                pkg.installedArchs.append(arch)
+                continue
+
+            # if package was not in cache, ensure that it is missing by checking the archive directly
             binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
             expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
             if os.path.isfile(expectedPackagePath):
                 pkg.installedArchs.append(arch)
                 continue
-            # NOTE: Temporary hack to catch at least a few binNMUs which were binary-synced from Debian
-            # RegEx to catch binNMUs: re.match(r".*\+b\d$", "1.0+b1")
-            # FIXME: This code needs to be rewritten, probably by scanning the binary-file database instead of the directory
-            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch() + "+b1", arch, fileExt)
-            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
-            if os.path.isfile(expectedPackagePath):
-                pkg.installedArchs.append(arch)
-                continue
 
 
     def get_packages_for(self, dist, component):
+        # create a cache of all installed packages on the different architectures
+        self._build_installed_pkgs_cache(dist, component)
         source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
         tagf = TagFile (f)
@@ -120,6 +122,20 @@ class PackageInfoRetriever():
             packageList += [pkg]
 
         return packageList
+
+    def _build_installed_pkgs_cache(self, dist, component):
+        for arch in self._supportedArchs:
+            source_path = self._archivePath + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, component, arch)
+            f = gzip.open(source_path, 'rb')
+            tagf = TagFile (f)
+            packageList = []
+            for section in tagf:
+                pkgversion = section['Version']
+                pkgname = section['Package']
+
+                packageList.append("%s_%s_%s" % (pkgname, pkgversion, arch))
+
+        self._installedPkgs = packageList
 
     def get_all_packages(self):
         packageList = []
