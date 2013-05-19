@@ -25,10 +25,10 @@ checks_and_defaults() {
     exit 1
   fi
 
-  if [ -z "${architecture:-}" ] ; then
-    echo "*** No architecture defined. Consider running it with matrix configuration. ***"
-    architecture="$(dpkg-architecture -qDEB_HOST_ARCH)"
-    echo "*** Falling back to default, using host architecture ${architecture}. ***"
+  if [ -z "${build_architecture:-}" ] ; then
+    echo "*** No build-architecture defined. Consider running it with matrix configuration. ***"
+    build_architecture="$(dpkg-architecture -qDEB_HOST_ARCH)"
+    echo "*** Falling back to default, using host architecture ${build_architecture}. ***"
   fi
 
   if [ -z "${DEBEMAIL:-}" ] ; then
@@ -133,12 +133,12 @@ identify_sourcefile() {
 }
 
 dist_and_arch_settings() {
-  if [ -z "${architecture:-}" ] || [ "${architecture:-}" = "all" ] ; then
+  if [ -z "${build_architecture:-}" ] || [ "${build_architecture:-}" = "all" ] ; then
     arch="$(dpkg-architecture -qDEB_HOST_ARCH)"
     echo "*** No architecture set or architecture set to 'all', using system arch ${arch} ***"
   else
-    arch="${architecture}"
-    echo "*** architecture is set to ${architecture} ***"
+    arch="${build_architecture}"
+    echo "*** architecture is set to ${build_architecture} ***"
   fi
 
   # only set $arch for other functions in this script if PROVIDE_ONLY is set
@@ -215,34 +215,34 @@ identify_build_type() {
   DEBBUILDOPTS="-B" # -B -> build binary packages for current architecture only
   SKIP_ARCH_BUILD=false
 
-  if [ "${architecture:-}" = "all" ] ; then
-    echo "*** \$architecture is set to 'all', skipping further identify_build_type checks. ***"
-    echo "*** ERROR: \$architecture has no valid value (all), consider setting it to amd64, i386,... instead. ***"
+  if [ "${build_architecture:-}" = "all" ] ; then
+    echo "*** \$build_architecture is set to 'all', skipping further identify_build_type checks. ***"
+    echo "*** ERROR: \$build_architecture has no valid value (all), consider setting it to amd64, i386,... instead. ***"
     exit 2
   fi
 
-  if [ "${architecture:-}" = "amd64" ] ; then
+  if [ "${build_architecture:-}" = "amd64" ] ; then
     echo "*** Detected amd64 architecture/machine, building arch:all packages. ***"
     # -b -> build only binary packages (arch:any, arch:all)
     DEBBUILDOPTS="-b"
   fi
 
   if [ -z "${MAIN_ARCHITECTURE:-}" ] ; then
-    if [ "$(dpkg-architecture -qDEB_HOST_ARCH)" = "${architecture:-}" ] ; then
+    if [ "$(dpkg-architecture -qDEB_HOST_ARCH)" = "${build_architecture:-}" ] ; then
       echo "*** MAIN_ARCHITECTURE is unset. ***"
-      echo "*** Host architecture [$(dpkg-architecture -qDEB_HOST_ARCH)] matches \$architecture [${architecture:-}], using default ${DEBBUILDOPTS:-} buildoption ***"
+      echo "*** Host architecture [$(dpkg-architecture -qDEB_HOST_ARCH)] matches \$architecture [${build_architecture:-}], using default ${DEBBUILDOPTS:-} buildoption ***"
       return 0
     else
       echo "*** MAIN_ARCHITECTURE is unset. ***"
-      echo "*** Host architecture [$(dpkg-architecture -qDEB_HOST_ARCH)] does not match \$architecture [${architecture:-}] ... ***"
+      echo "*** Host architecture [$(dpkg-architecture -qDEB_HOST_ARCH)] does not match \$build_architecture [${build_architecture:-}] ... ***"
     fi
   else
-    if [ "${MAIN_ARCHITECTURE:-}" = "${architecture:-}" ] ;then
+    if [ "${MAIN_ARCHITECTURE:-}" = "${build_architecture:-}" ] ;then
       echo "*** MAIN_ARCHITECTURE is set [${MAIN_ARCHITECTURE:-}]. ***"
-      echo "*** MAIN_ARCHITECTURE matches \$architecture [${architecture:-}], using default ${DEBBUILDOPTS:-} buildoption ***"
+      echo "*** MAIN_ARCHITECTURE matches \$build_architecture [${build_architecture:-}], using default ${DEBBUILDOPTS:-} buildoption ***"
       return 0
     else
-      echo "*** MAIN_ARCHITECTURE [${MAIN_ARCHITECTURE:-}] does not match \$architecture [${architecture:-}], continuing with identify_build_type ***"
+      echo "*** MAIN_ARCHITECTURE [${MAIN_ARCHITECTURE:-}] does not match \$build_architecture [${build_architecture:-}], continuing with identify_build_type ***"
     fi
   fi
 
@@ -286,7 +286,7 @@ autopkgtest_results() {
 }
 
 cowbuilder_run() {
-  echo "*** cowbuilder build phase for arch $architecture ***"
+  echo "*** cowbuilder build phase for arch $build_architecture ***"
   mkdir -p "$WORKSPACE"/binaries/ /tmp/adt-$$ /tmp/apt-$$
 
   local BINDMOUNTS="/tmp/adt-$$ /tmp/apt-$$"
@@ -318,7 +318,7 @@ cowbuilder_run() {
 #    fi
 #  fi
 
-  case "$architecture" in
+  case "$build_architecture" in
     i386)
       linux32 sudo cowbuilder --buildresult "$WORKSPACE"/binaries/ \
         --build $sourcefile \
@@ -336,7 +336,7 @@ cowbuilder_run() {
       [ $? -eq 0 ] || bailout 1 "Error: Failed to build with cowbuilder."
       ;;
     *)
-      bailout 1 "Error: Unsupported architecture: $architecture"
+      bailout 1 "Error: Unsupported architecture: $build_architecture"
       ;;
   esac
 }
