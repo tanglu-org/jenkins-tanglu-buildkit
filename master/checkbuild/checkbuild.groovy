@@ -24,6 +24,13 @@ import hudson.*
 import hudson.model.*
 jenkinsInstance = hudson.model.Hudson.instance
 
+// the build queue
+queue = Hudson.getInstance().getQueue();
+qitems = queue.getItems();
+scheduled_jobs = [];
+for (qitem in qitems)
+       	scheduled_jobs.add(item.task.getFullDisplayName());
+
 archList = ["all", "amd64", "i386"];
 
 def perform_buildcheck (dist, comp, package_name, arch) {
@@ -116,13 +123,6 @@ def check_and_schedule_job (project) {
 	dist = pieces[0];
 	comp = pieces[1];
 	pkg_name = pieces[2];
-
-	// the build queue
-	queue = Hudson.getInstance().getQueue();
-	qitems = queue.getItems();
-	scheduled_jobs = [];
-	for (qitem in qitems)
-        	scheduled_jobs.add(item.task.getFullDisplayName());
 
 	for (arch in archList) {
 		if (project.getItem("Architecture=arch-${arch}") == null)
