@@ -73,6 +73,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 	// prepare change of main project description
 	pdesc = project.getDescription();
+	pdesc_complete = pdesc;
 	p_sep_idx = pdesc.indexOf('<br/>----');
 	if (p_sep_idx > 0)
 		pdesc = pdesc.substring(0, p_sep_idx);
@@ -85,16 +86,25 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 		build_project = true;
 
 		// reset the main description, if necessary (only reset it if no arch is in DEPWAIT anymore)
-		if ((pdesc.indexOf("Status: DEPWAIT (${arch})") >= 0) || (pdesc.indexOf("Status: DEPWAIT") <= 0)) {
+		if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") >= 0)
+			pdesc = pdesc.replace("Status: DEPWAIT (${arch})", "");
+ 		if (pdesc_complete.indexOf("Status: DEPWAIT") <= 0))
 			pdesc = pdesc + '<br/>----<br/><br>There are no notes about this package.';
-			project.setDescription(pdesc);
-		}
+		project.setDescription(pdesc);
+
 	} else if (code == 8) {
 		// we are waiting for depedencies
 		desc = desc + "<br/>----<br/>" + proc.in.text.replaceAll('\n', "<br/>");
 		// add an information to the main project description too
 
-		pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
+		if (pdesc_complete.indexOf("Status: DEPWAIT") >= 0) {
+			if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") <= 0) {
+				// apparently the other arch is in depwait too, so add ours now
+				pdesc = pdesc_complete + "<br/>Status: DEPWAIT (${arch})";
+			}
+		} else {
+			pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
+		}	
 		project.setDescription(pdesc);
 
 		build_project = false;
