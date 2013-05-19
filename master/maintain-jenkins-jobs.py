@@ -85,7 +85,12 @@ class BuildJobUpdater:
                 print("Skipping job %s %s on %s, no architectures found!" % (pkg.pkgname, pkg.version, pkg.dist))
                 continue
 
-            ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, pkgArchs, pkg.info)
+            # packages for arch:all are built on amd64, we don't need an extra build slot for them if it is present
+            buildArchs = pkgArchs
+            if ("amd64" in buildArchs) and ("all" in buildArchs):
+                buildArchs.remove("all")
+
+            ret = self._jenkins.create_update_job(pkg.pkgname, pkg.version, pkg.component, pkg.dist, buildArchs, pkg.info)
             if not ret:
                 if self.debugMode:
                         print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
