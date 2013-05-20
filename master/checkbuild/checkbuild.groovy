@@ -24,6 +24,9 @@ import hudson.*
 import hudson.model.*
 jenkinsInstance = hudson.model.Hudson.instance
 
+NEEDSBUILD_EXPORT_DIR = '/srv/dak/export/needsbuild';
+archList = ["all", "amd64", "i386"];
+
 // the build queue
 queue = Hudson.getInstance().getQueue();
 qitems = queue.getItems();
@@ -46,9 +49,6 @@ for (Computer computer : Hudson.getInstance().getComputers()) {
 		}
 	}
 }
-
-
-archList = ["all", "amd64", "i386"];
 
 def perform_buildcheck (dist, comp, package_name, arch) {
 	buildConfig = project.getItem("Architecture=arch-${arch}");
@@ -74,10 +74,24 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (jobVersion == lastVersionBuilt)
 		return false;
 
-	// check if we should build this package (if all dependencies are in place)
-	def command = """package-buildcheck -c ${dist} ${comp} ${package_name} ${arch}""";
-	def proc = command.execute();
-	proc.waitFor();
+	// check if package should be built using the exported XML data
+	def xmlData = new XmlParser().parse("${NEEDSBUILD_EXPORT_DIR}/needsbuild-${dist}-${comp}_${arch}.xml");
+	pkgNode = xmlData.package.findAll{ it.'@package' == "source+${package_name}" }
+	println pkgNode
+	if (pkgNode.size() == 0) {
+		println ("Unable to find ${dist} ${comp} ${package_name} ${arch} in exported needs-build info. Skipping it.");
+		return false;
+	}
+	dependency_wait = false;
+	build_possible = false;
+	depends_hint = "";
+	res = pkgNode.'@result'[0];
+	if (res != "success") {
+  		dependency_wait = true;
+		depends_hint = pkgNode[0].text();
+	} else if (res == "success") {
+		build_possible = true;
+	}
 
 	// prepare change of the project notes (in description of the matrix axes)
 	desc = buildConfig.getDescription();
@@ -97,8 +111,9 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 	// check for the different return codes
 	build_project = false;
-	code = proc.exitValue();
-	if (code == 0) {
+
+	if (build_possible) {
+		// we can build the project!
 		desc = desc + '<br/>----<br/><br/>There are no notes about this build.'
 		build_project = true;
 
@@ -109,9 +124,9 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 			pdesc = pdesc + '<br/>----<br/><br>There are no notes about this package.';
 		project.setDescription(pdesc);
 
-	} else if (code == 8) {
+	} else if (dependency_wait) {
 		// we are waiting for depedencies
-		desc = desc + "<br/>----<br/>" + proc.in.text.replaceAll('\n', "<br/>");
+		desc = desc + "<br/>----<br/>" + depends_hint.replaceAll('\n', "<br/>");
 		// add an information to the main project description too
 
 		if (pdesc_complete.indexOf("Status: DEPWAIT") >= 0) {
@@ -200,7 +215,13 @@ def check_and_schedule_job (project) {
 allItems = jenkinsInstance.items;
 
 nonbuilt_pkgs = [];
-new File('/srv/dak/export/needsbuild/needsbuild.list').eachLine { line ->
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild.list').eachLine { line ->
+	nonbuilt_pkgs.add("pkg+" + line);
+}
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-contrib.list').eachLine { line ->
+	nonbuilt_pkgs.add("pkg+" + line);
+}
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-non-free.list').eachLine { line ->
 	nonbuilt_pkgs.add("pkg+" + line);
 }
 
