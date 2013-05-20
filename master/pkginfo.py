@@ -58,7 +58,7 @@ class PackageInfoRetriever():
         self._archiveDists = parser.get('Archive', 'dists').split (" ")
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs.append("all")
-        self._installedPkgs = []
+        self._installedPkgs = {}
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
@@ -69,18 +69,16 @@ class PackageInfoRetriever():
             if arch in pkg.installedArchs:
                 continue
             # test the caches
-            pkg_id = "%s_%s_%s" % (binaryName, pkg.version, arch)
+            pkg_id = "%s_%s" % (binaryName, arch)
             if pkg_id in self._installedPkgs:
-                pkg.installedArchs.append(arch)
-                continue
-
-            # try to catch binNMUed packages from Debian
-            for pkgid in self._installedPkgs:
-                if re.match(re.escape(pkg_id) + "\+b\d$", pkgid):
+                existing_pkgversion = self._installedPkgs[pkg_id]
+                if pkg.version == existing_pkgversion:
                     pkg.installedArchs.append(arch)
-                    break
-            if arch in pkg.installedArchs:
-                continue
+                    continue
+                # try to catch binNMUed packages from Debian
+                if re.match(re.escape(pkg.version) + "\+b\d$", existing_pkgversion):
+                    pkg.installedArchs.append(arch)
+                    continue
 
             # if package was not in cache, ensure that it is missing by checking the archive directly
             binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
@@ -142,9 +140,7 @@ class PackageInfoRetriever():
                 pkgversion = section['Version']
                 pkgname = section['Package']
 
-                packageList.append("%s_%s_%s" % (pkgname, pkgversion, arch))
-
-        self._installedPkgs = packageList
+                self._installedPkgs["%s_%s" % (pkgname, arch)] = pkgversion
 
     def get_all_packages(self):
         packageList = []
