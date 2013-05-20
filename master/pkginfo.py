@@ -78,7 +78,9 @@ class PackageInfoRetriever():
             for pkgid in self._installedPkgs:
                 if re.match(re.escape(pkg_id) + "\+b\d$", pkgid):
                     pkg.installedArchs.append(arch)
-                    continue
+                    break
+            if arch in pkg.installedArchs:
+                continue
 
             # if package was not in cache, ensure that it is missing by checking the archive directly
             binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
