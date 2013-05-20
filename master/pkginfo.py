@@ -139,8 +139,13 @@ class PackageInfoRetriever():
             for section in tagf:
                 pkgversion = section['Version']
                 pkgname = section['Package']
-
-                self._installedPkgs["%s_%s" % (pkgname, arch)] = pkgversion
+                pkid = "%s_%s" % (pkgname, arch)
+                if pkid in self._installedPkgs:
+                   regVersion = self._installedPkgs[pkid]
+                   compare = version_compare(regVersion, pkgversion)
+                   if compare >= 0:
+                       continue
+                self._installedPkgs[pkid] = pkgversion
 
     def get_all_packages(self):
         packageList = []
