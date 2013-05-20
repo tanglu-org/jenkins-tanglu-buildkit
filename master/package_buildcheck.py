@@ -64,6 +64,7 @@ class BuildCheck:
         if useXML:
             edos_cmd.append("-xml")
         edos_cmd.extend(["-explain", "-quiet", "-checkonly", pkg_list_str])
+        print(edos_cmd)
 
         proc = subprocess.Popen(edos_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate(input=''.join(pl))
@@ -97,12 +98,9 @@ class BuildCheck:
         return 1
 
     def get_package_states_xml(self, dist, component, package_list, arch):
-        archive_packages = self._pkginfo.get_packages_for(dist, component)
-        pkg_dict = self._pkginfo.package_list_to_dict(archive_packages)
         query_list = []
         
-        for pkg_name in package_list:
-            src_pkg = pkg_dict[pkg_name]
+        for src_pkg in package_list:
             archs = src_pkg.archs
             if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
                 query_list.append(src_pkg)
