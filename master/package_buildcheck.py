@@ -44,9 +44,9 @@ class BuildCheck:
 
         # write fake package-info for edos-debcheck
         pkg_list_str = ""
+        f = gzip.open(archive_binary_index_path, 'rb')
+        pl = f.readlines()
         for pkg in pkg_list:
-            f = gzip.open(archive_binary_index_path, 'rb')
-            pl = f.readlines()
             pl.append("")
             pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
             pl.append('Version: %s\n' % (pkg.version))
