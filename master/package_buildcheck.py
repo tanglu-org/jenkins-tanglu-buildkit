@@ -56,7 +56,7 @@ class BuildCheck:
             if pkg_list_str == "":
                 pkg_list_str = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
             else:
-                pkg_list_str = ",%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
+                pkg_list_str += ",%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
 
         edos_cmd = ["edos-debcheck"]
         if onlyFailed:

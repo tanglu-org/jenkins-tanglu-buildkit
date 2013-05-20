@@ -118,6 +118,7 @@ class BuildJobUpdater:
         needsbuild_list.close()
         bcheck = BuildCheck()
         for arch in needsbuild_pkgs:
+            print("Begin Buildcheck")
             pkg_list = needsbuild_pkgs[arch]
             xml_data = bcheck.get_package_states_xml(dist, component, pkg_list, arch)
             print(xml_data)
