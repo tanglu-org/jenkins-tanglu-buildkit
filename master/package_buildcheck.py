@@ -47,12 +47,12 @@ class BuildCheck:
         f = gzip.open(archive_binary_index_path, 'rb')
         pl = f.readlines()
         for pkg in pkg_list:
-            pl.append("")
             pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
             pl.append('Version: %s\n' % (pkg.version))
             pl.append('Depends: %s\n' % (pkg.build_depends))
             pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
             pl.append('Architecture: %s\n' % (arch))
+            pl.append("\n")
             if pkg_list_str == "":
                 pkg_list_str = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
             else:
@@ -64,7 +64,6 @@ class BuildCheck:
         if useXML:
             edos_cmd.append("-xml")
         edos_cmd.extend(["-explain", "-quiet", "-checkonly", pkg_list_str])
-        print(edos_cmd)
 
         proc = subprocess.Popen(edos_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate(input=''.join(pl))
@@ -100,10 +99,11 @@ class BuildCheck:
     def get_package_states_xml(self, dist, component, package_list, arch):
         query_list = []
         
-        for src_pkg in package_list:
-            archs = src_pkg.archs
-            if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
-                query_list.append(src_pkg)
+        #for src_pkg in package_list:
+        #    archs = src_pkg.archs
+        #    if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
+        #        query_list.append(src_pkg)
+        query_list = package_list
         ret, info = self._run_edos_builddebcheck(dist, component, query_list, arch, useXML=True, onlyFailed=False)
 
         return info
