@@ -38,14 +38,10 @@ class BuildJobUpdater:
             self._unsupportedArchs.remove(arch)
 
     def _filterUnsupportedArchs(self, pkgArchs):
-        if ' ' in pkgArchs:
-            archs = pkgArchs.split(' ')
-        else:
-            archs = [pkgArchs]
-            for uarch in self._unsupportedArchs:
-                if uarch in archs:
-                    archs.remove(uarch)
-        return archs
+        for uarch in self._unsupportedArchs:
+            if uarch in pkgArchs:
+                pkgArchs.remove(uarch)
+        return pkgArchs
 
     def sync_packages(self):
         pkgList = self._pkginfo.get_all_packages()

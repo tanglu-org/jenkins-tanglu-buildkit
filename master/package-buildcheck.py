@@ -39,21 +39,33 @@ class BuildCheck:
 
     # NOTE: We obviously want to create a cache of this and rebuild it only every 1-2h, so
     # not every Jenkins job requests ends up in unpacking the whole archive index twice.
-    def _run_edos_builddebcheck(self, dist, comp, pkg, arch):
+    def _run_edos_builddebcheck(self, dist, comp, pkg_list, arch, useXML=False, onlyFailed=True):
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
 
         # write fake package-info for edos-debcheck
-        f = gzip.open(archive_binary_index_path, 'rb')
-        pl = f.readlines()
-        pl.append("")
-        pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
-        pl.append('Version: %s\n' % (pkg.version))
-        pl.append('Depends: %s\n' % (pkg.build_depends))
-        pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
-        pl.append('Architecture: %s\n' % (arch))
+        pkg_list_str = ""
+        for pkg in pkg_list:
+            f = gzip.open(archive_binary_index_path, 'rb')
+            pl = f.readlines()
+            pl.append("")
+            pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
+            pl.append('Version: %s\n' % (pkg.version))
+            pl.append('Depends: %s\n' % (pkg.build_depends))
+            pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
+            pl.append('Architecture: %s\n' % (arch))
+            if pkg_list_str == "":
+                pkg_list_str = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
+            else:
+                pkg_list_str = ",%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
 
-        pkg_list = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
-        proc = subprocess.Popen(["edos-debcheck", "-failures", "-explain", "-quiet", "-checkonly", pkg_list], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        edos_cmd = ["edos-debcheck"]
+        if onlyFailed:
+            edos_cmd.append("-failures")
+        if useXML:
+            edos_cmd.append("-xml")
+        edos_cmd.extend(["-explain", "-quiet", "-checkonly", pkg_list_str])
+
+        proc = subprocess.Popen(edos_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate(input=''.join(pl))
         output = "%s\n%s" % (stdout, stderr)
         if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
@@ -72,7 +84,7 @@ class BuildCheck:
         src_pkg = pkg_dict[package_name]
 
         if not arch in src_pkg.installedArchs:
-            ret, info = self._run_edos_builddebcheck(dist, component, src_pkg, arch)
+            ret, info = self._run_edos_builddebcheck(dist, component, [src_pkg], arch)
             if not ret:
                 print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, info))
                 # return code 8, which means dependency-wait
@@ -83,6 +95,20 @@ class BuildCheck:
 
         # apparently, we don't need to build the package
         return 1
+
+    def get_package_states_xml(self, dist, component, package_list, arch):
+        archive_packages = self._pkginfo.get_packages_for(dist, component)
+        pkg_dict = self._pkginfo.package_list_to_dict(archive_packages)
+        query_list = []
+        
+        for pkg_name in package_list:
+            src_pkg = pkg_dict[pkg_name]
+            archs = src_pkg.archs
+            if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
+                query_list.append(src_pkg)
+        ret, info = self._run_edos_builddebcheck(dist, component, query_list, arch, useXML=True, onlyFailed=False)
+
+        return info
 
 def main():
     # init Apt, we need it later

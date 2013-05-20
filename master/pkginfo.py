@@ -101,10 +101,14 @@ class PackageInfoRetriever():
             if section.get('Extra-Source-Only', 'no') == 'yes':
                 pass
 
-            archs = section['Architecture']
+            archs_str = section['Architecture']
             binaries = section['Binary']
             pkgversion = section['Version']
             pkgname = section['Package']
+            if ' ' in archs_str:
+                archs = archs_str.split(' ')
+            else:
+                archs = [archs_str]
             pkg = PackageInfo(pkgname, pkgversion, dist, component, archs)
 
             pkg.info = ("Package: %s\nBinary Packages: %s\nMaintainer: %s\nCo-Maintainers: %s\nVCS-Browser: %s" %
@@ -113,7 +117,7 @@ class PackageInfoRetriever():
             # values needed for build-dependency solving
             pkg.build_depends = section.get('Build-Depends', '')
             pkg.build_conflicts = section.get('Build-Conflicts', '')
-            pkg.archs_str = archs
+            pkg.archs_str = archs_str
 
             # we check if one of the arch-binaries exists. if it does, we consider the package built for this architecture
             # FIXME: This does not work well for binNMUed packages! Implement a possible solution later.
