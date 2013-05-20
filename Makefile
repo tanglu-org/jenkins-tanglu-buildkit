@@ -27,7 +27,7 @@ install_slave: $(scripts)
 install_master: $(scripts)
 	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
 	ln -sf $(shell readlink -f ./master/maintain-jenkins-jobs.py) $(DESTDIR)/usr/bin/maintain-jenkins-jobs
-	ln -sf $(shell readlink -f ./master/package-buildcheck.py) $(DESTDIR)/usr/bin/package-buildcheck
+	ln -sf $(shell readlink -f ./master/package_buildcheck.py) $(DESTDIR)/usr/bin/package-buildcheck
 
 install:
 	echo "Please use install_master or install_slave, depening on your setting."

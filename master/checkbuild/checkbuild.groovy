@@ -200,7 +200,7 @@ def check_and_schedule_job (project) {
 allItems = jenkinsInstance.items;
 
 nonbuilt_pkgs = [];
-new File('/srv/dak/queue/needsbuild.list').eachLine { line ->
+new File('/srv/dak/export/needsbuild/needsbuild.list').eachLine { line ->
 	nonbuilt_pkgs.add("pkg+" + line);
 }
 
