@@ -41,11 +41,15 @@ class BuildCheck:
     # not every Jenkins job requests ends up in unpacking the whole archive index twice.
     def _run_edos_builddebcheck(self, dist, comp, pkg_list, arch, useXML=False, onlyFailed=True):
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
+        f = gzip.open(archive_binary_index_path, 'rb')
+        pl = f.readlines()
+        if arch != "all":
+            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
+            f = gzip.open(archive_binary_index_path_all, 'rb')
+            pl.extend(f.readlines())
 
         # write fake package-info for edos-debcheck
         pkg_list_str = ""
-        f = gzip.open(archive_binary_index_path, 'rb')
-        pl = f.readlines()
         for pkg in pkg_list:
             pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
             pl.append('Version: %s\n' % (pkg.version))
