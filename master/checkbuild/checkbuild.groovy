@@ -77,11 +77,11 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	// check if package should be built using the exported XML data
 	def xmlData = new XmlParser().parse("${NEEDSBUILD_EXPORT_DIR}/needsbuild-${dist}-${comp}_${arch}.xml");
 	pkgNode = xmlData.package.findAll{ it.'@package' == "source+${package_name}" }
-	println pkgNode
 	if (pkgNode.size() == 0) {
-		println ("Unable to find ${dist} ${comp} ${package_name} ${arch} in exported needs-build info. Skipping it.");
+		println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported needs-build info. Skipping it.");
 		return false;
 	}
+
 	dependency_wait = false;
 	build_possible = false;
 	depends_hint = "";
