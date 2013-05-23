@@ -58,7 +58,13 @@ class BuildCheck:
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
         f = gzip.open(archive_binary_index_path, 'rb')
         pl.extend(f.readlines())
-        if arch != "all":
+        if arch == "all":
+            # if arch is all, we feed the solver with a binary architecture as example, to solve dependencies on arch-specific stuff
+            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-amd64/Packages.gz" % (dist, comp)
+            f = gzip.open(archive_binary_index_path_all, 'rb')
+            pl.extend(f.readlines())
+        else:
+            # any architecture canb also depend on arch:all stuff, so we add it to the loop
             archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
             f = gzip.open(archive_binary_index_path_all, 'rb')
             pl.extend(f.readlines())
