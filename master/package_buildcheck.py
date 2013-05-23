@@ -103,7 +103,7 @@ class BuildCheck:
 
     def get_package_states_xml(self, dist, component, package_list, arch):
         query_list = []
-        
+
         #for src_pkg in package_list:
         #    archs = src_pkg.archs
         #    if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):

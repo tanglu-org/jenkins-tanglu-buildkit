@@ -38,7 +38,7 @@ for (qitem in qitems) {
       	 	scheduled_jobs.add(job.getParent().getName());
  	}
 }
-  
+
 for (Computer computer : Hudson.getInstance().getComputers()) {
 	for (Executor executor : computer.getExecutors()) {
 		currentExecutable = executor.getCurrentExecutable();
@@ -136,7 +136,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 			}
 		} else {
 			pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
-		}	
+		}
 		project.setDescription(pdesc);
 		println("Job ${project.getName()} is in depwait on ${arch}.");
 
@@ -180,7 +180,7 @@ def check_and_schedule_job (project) {
 				println("Skipping ${pkg_name} (on ${arch}), a package job is already in queue.");
 				continue;
 			} else {
-				
+
 			}
 
 			// add arch to to-be-built archlist
