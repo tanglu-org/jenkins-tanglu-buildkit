@@ -6,7 +6,9 @@ pkgJobs = allItems.findAll{job -> job.name.contains("pkg+")}
 for (job in pkgJobs) {
 	build = job.getLastBuild()
 	if (build != null) {
-		if (build.result != Result.SUCCESS)
-			job.delete()
+		if (build.result != Result.SUCCESS) {
+			println("Delete: ${job.getName()}");
+			job.delete();
+		}
 	}
 }

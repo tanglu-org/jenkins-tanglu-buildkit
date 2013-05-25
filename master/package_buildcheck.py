@@ -40,8 +40,21 @@ class BuildCheck:
     # NOTE: We obviously want to create a cache of this and rebuild it only every 1-2h, so
     # not every Jenkins job requests ends up in unpacking the whole archive index twice.
     def _run_edos_builddebcheck(self, dist, comp, pkg_list, arch, useXML=False, onlyFailed=True):
+        archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
+        f = gzip.open(archive_binary_index_path, 'rb')
+        pl = f.readlines()
+        if arch == "all":
+            # if arch is all, we feed the solver with a binary architecture as example, to solve dependencies on arch-specific stuff
+            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-amd64/Packages.gz" % (dist, comp)
+            f = gzip.open(archive_binary_index_path_all, 'rb')
+            pl.extend(f.readlines())
+        else:
+            # any architecture canb also depend on arch:all stuff, so we add it to the loop
+            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
+            f = gzip.open(archive_binary_index_path_all, 'rb')
+            pl.extend(f.readlines())
+
         # write fake package-info for edos-debcheck
-        pl = []
         pkg_list_str = ""
         for pkg in pkg_list:
             pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
@@ -54,20 +67,6 @@ class BuildCheck:
                 pkg_list_str = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
             else:
                 pkg_list_str += ",%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
-
-        archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
-        f = gzip.open(archive_binary_index_path, 'rb')
-        pl.extend(f.readlines())
-        if arch == "all":
-            # if arch is all, we feed the solver with a binary architecture as example, to solve dependencies on arch-specific stuff
-            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-amd64/Packages.gz" % (dist, comp)
-            f = gzip.open(archive_binary_index_path_all, 'rb')
-            pl.extend(f.readlines())
-        else:
-            # any architecture canb also depend on arch:all stuff, so we add it to the loop
-            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
-            f = gzip.open(archive_binary_index_path_all, 'rb')
-            pl.extend(f.readlines())
 
         edos_cmd = ["edos-debcheck"]
         if onlyFailed:
