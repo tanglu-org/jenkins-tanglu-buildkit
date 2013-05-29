@@ -19,7 +19,6 @@
 import os
 import apt_pkg
 from optparse import OptionParser
-from joblib import Parallel, delayed
 
 from jenkinsctl import *
 from pkginfo import *
