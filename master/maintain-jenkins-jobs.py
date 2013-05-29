@@ -19,6 +19,7 @@
 import os
 import apt_pkg
 from optparse import OptionParser
+from joblib import Parallel, delayed
 
 from jenkinsctl import *
 from pkginfo import *
@@ -83,7 +84,7 @@ class BuildJobUpdater:
                             print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
                  if not 'all' in pkg.installedArchs:
                      needsbuild_pkgs["all"].append(pkg)
-                     needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
+                     needsbuild_list.write("%s_%s [%s]\n" % (pkg.pkgname, pkg.getVersionNoEpoch(), "all"))
                      if self.scheduleBuilds:
                          self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, "all")
                  continue
@@ -114,7 +115,7 @@ class BuildJobUpdater:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
                     needsbuild_pkgs[arch].append(pkg)
-                    needsbuild_list.write("%s_%s\n" % (pkg.pkgname, pkg.version))
+                    needsbuild_list.write("%s_%s [%s]\n" % (pkg.pkgname, pkg.getVersionNoEpoch(), arch))
                     #if self.scheduleBuilds:
                     #    self._jenkins.schedule_build_if_not_failed(pkg.pkgname, pkg.version, arch)
         needsbuild_list.close()

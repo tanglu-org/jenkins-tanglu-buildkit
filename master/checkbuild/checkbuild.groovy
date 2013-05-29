@@ -78,7 +78,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	def xmlData = new XmlParser().parse("${NEEDSBUILD_EXPORT_DIR}/needsbuild-${dist}-${comp}_${arch}.xml");
 	pkgNode = xmlData.package.findAll{ it.'@package' == "source+${package_name}" }
 	if (pkgNode.size() == 0) {
-		println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported needs-build info. Skipping it.");
+		println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported needs-build info. Skipping it for now.");
 		return false;
 	}
 
@@ -216,13 +216,25 @@ allItems = jenkinsInstance.items;
 
 nonbuilt_pkgs = [];
 new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild.list').eachLine { line ->
-	nonbuilt_pkgs.add("pkg+" + line);
+	pkgid = line;
+	sep_idx = pkgid.indexOf(' ');
+	if (sep_idx > 0)
+		pkgid = pkgid.substring(0, sep_idx);
+	nonbuilt_pkgs.add("pkg+" + pkgid);
 }
 new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-contrib.list').eachLine { line ->
-	nonbuilt_pkgs.add("pkg+" + line);
+	pkgid = line;
+	sep_idx = pkgid.indexOf(' ');
+	if (sep_idx > 0)
+		pkgid = pkgid.substring(0, sep_idx);
+	nonbuilt_pkgs.add("pkg+" + pkgid);
 }
 new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-non-free.list').eachLine { line ->
-	nonbuilt_pkgs.add("pkg+" + line);
+	pkgid = line;
+	sep_idx = pkgid.indexOf(' ');
+	if (sep_idx > 0)
+		pkgid = pkgid.substring(0, sep_idx);
+	nonbuilt_pkgs.add("pkg+" + pkgid);
 }
 
 for (item in allItems) {
