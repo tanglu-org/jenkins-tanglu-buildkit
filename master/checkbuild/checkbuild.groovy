@@ -195,9 +195,8 @@ def check_and_schedule_job (project) {
 	for (arch in archList) {
 		// check if a build on this architecture is needed, skip build if not
 		project_arch_id = project.getName() + " [${arch}]";
-		if (!project_arch_id in nonbuilt_pkgs)
-			continue;
-		buildArchs.append(arch);
+		if (project_arch_id in nonbuilt_pkgs)
+			buildArchs.add(arch);
 	}
 	// if there are no build-needing archs, skip the build
 	if (buildArchs.isEmpty())
@@ -242,7 +241,7 @@ def check_and_schedule_job (project) {
 	if (scheduledArchs.equals(buildArchs)) {
 		// this means we can build the whole project!
 		println("Going to build ${pkg_name} (complete rebuild)");
-		queue.schedule(project, 8);
+		//! queue.schedule(project, 8);
 	} else {
 		for (arch in scheduledArchs) {
 			println("Going to build ${pkg_name} on ${arch}");
@@ -251,7 +250,7 @@ def check_and_schedule_job (project) {
 			//raction.setBaseBuildNumber(mbuild.getNumber());
 			raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
 
-			queue.schedule(project, 8, raction);
+			//! queue.schedule(project, 8, raction);
 
 			//buildConfig.scheduleBuild2(8,
 			//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),
