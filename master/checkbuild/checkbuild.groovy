@@ -60,6 +60,19 @@ for (Computer computer : Hudson.getInstance().getComputers()) {
 	}
 }
 
+// get a list of all build-needing packages
+nonbuilt_pkgs = [];
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild.list').eachLine { line ->
+	nonbuilt_pkgs.add("pkg+" + line);
+}
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-contrib.list').eachLine { line ->
+	nonbuilt_pkgs.add("pkg+" + line);
+}
+new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-non-free.list').eachLine { line ->
+	nonbuilt_pkgs.add("pkg+" + line);
+}
+//
+
 def perform_buildcheck (dist, comp, package_name, arch) {
 	buildConfig = project.getItem("Architecture=arch-${arch}");
 	if (buildConfig == null) {
@@ -177,6 +190,19 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 }
 
 def check_and_schedule_job (project) {
+	// check if we actually need to build the job
+	buildArchs = [];
+	for (arch in archList) {
+		// check if a build on this architecture is needed, skip build if not
+		project_arch_id = project.getName() + " [${arch}]";
+		if (!project_arch_id in nonbuilt_pkgs)
+			continue;
+		buildArchs.append(arch);
+	}
+	// if there are no build-needing archs, skip the build
+	if (buildArchs.isEmpty())
+		return;
+
 	masterDesc = project.getDescription();
 
 	def match = masterDesc =~ "Identifier:(.*)<br/>";
@@ -193,13 +219,12 @@ def check_and_schedule_job (project) {
 	comp = pieces[1];
 	pkg_name = pieces[2];
 
-	projectArchs = [];
-	buildArchs = [];
-
-	for (arch in archList) {
+	scheduledArchs = [];
+	for (arch in buildArchs) {
+		// sanity check
 		if (project.getItem("Architecture=arch-${arch}") == null)
 			continue;
-		projectArchs.add(arch);
+
 		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
 			jobName = project.getName();
 			if (jobName in scheduled_jobs) {
@@ -210,16 +235,16 @@ def check_and_schedule_job (project) {
 			}
 
 			// add arch to to-be-built archlist
-			buildArchs.add(arch);
+			scheduledArchs.add(arch);
 		}
 	}
 
-	if (buildArchs.equals(projectArchs)) {
+	if (scheduledArchs.equals(buildArchs)) {
 		// this means we can build the whole project!
 		println("Going to build ${pkg_name} (complete rebuild)");
 		queue.schedule(project, 8);
 	} else {
-		for (arch in buildArchs) {
+		for (arch in scheduledArchs) {
 			println("Going to build ${pkg_name} on ${arch}");
 			//mbuild = new matrix.MatrixBuild(project);
 			raction = new net.praqma.jenkins.plugin.reloaded.RebuildAction();
@@ -240,29 +265,6 @@ def check_and_schedule_job (project) {
 
 allItems = jenkinsInstance.items;
 
-nonbuilt_pkgs = [];
-new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild.list').eachLine { line ->
-	pkgid = line;
-	sep_idx = pkgid.indexOf(' ');
-	if (sep_idx > 0)
-		pkgid = pkgid.substring(0, sep_idx);
-	nonbuilt_pkgs.add("pkg+" + pkgid);
-}
-new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-contrib.list').eachLine { line ->
-	pkgid = line;
-	sep_idx = pkgid.indexOf(' ');
-	if (sep_idx > 0)
-		pkgid = pkgid.substring(0, sep_idx);
-	nonbuilt_pkgs.add("pkg+" + pkgid);
-}
-new File(NEEDSBUILD_EXPORT_DIR + '/needsbuild-non-free.list').eachLine { line ->
-	pkgid = line;
-	sep_idx = pkgid.indexOf(' ');
-	if (sep_idx > 0)
-		pkgid = pkgid.substring(0, sep_idx);
-	nonbuilt_pkgs.add("pkg+" + pkgid);
-}
-
 for (item in allItems) {
 	project = null;
 	if (item.getName().startsWith("pkg+"))
@@ -275,6 +277,5 @@ for (item in allItems) {
 		continue;
 	}
 
-	if (project.getName() in nonbuilt_pkgs)
-		check_and_schedule_job(project);
+	check_and_schedule_job(project);
 }
