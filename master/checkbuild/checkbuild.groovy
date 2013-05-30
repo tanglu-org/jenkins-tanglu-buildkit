@@ -151,6 +151,8 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 			if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") < 0) {
 				// apparently the other arch is in depwait too, so add ours now
 				pdesc = pdesc_complete + "<br/>Status: DEPWAIT (${arch})";
+			} else {
+				pdesc = pdesc_complete;
 			}
 		} else {
 			pdesc = pdesc + "<br/>----<br/><br/>Status: DEPWAIT (${arch})";
