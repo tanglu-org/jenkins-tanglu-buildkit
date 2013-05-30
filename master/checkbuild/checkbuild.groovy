@@ -211,7 +211,7 @@ def check_and_schedule_job (project) {
 	if (buildArchs.equals(projectArchs)) {
 		// this means we can build the whole project!
 		println("Going to build ${pkg_name} (complete rebuild)");
-		//! queue.schedule(project, 8);
+		queue.schedule(project, 8);
 	} else {
 		for (arch in buildArchs) {
 			println("Going to build ${pkg_name} on ${arch}");
@@ -220,7 +220,7 @@ def check_and_schedule_job (project) {
 			//raction.setBaseBuildNumber(mbuild.getNumber());
 			raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
 
-			//! queue.schedule(project, 8, raction);
+			queue.schedule(project, 8, raction);
 
 			//buildConfig.scheduleBuild2(8,
 			//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),
