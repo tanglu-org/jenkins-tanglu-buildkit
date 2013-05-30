@@ -110,7 +110,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (pkgNode == null) {
 		//println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported depwait info. Scheduling build.");
 		if (other_version_depwait != null)
-			println ("Package ${package_name}, version ${other_version_depwait} is in depwait, but we are building version ${jobVersion} now.");
+			println ("Package ${package_name}, version ${other_version_depwait} is in depwait on ${arch}, but we can build version ${jobVersion} now.");
 		build_possible = true;
 	} else {
 		dependency_wait = true;
