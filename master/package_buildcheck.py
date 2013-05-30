@@ -19,15 +19,12 @@
 import os
 import apt_pkg
 import sys
-import tempfile
 import subprocess
+import yaml
 from optparse import OptionParser
 from ConfigParser import SafeConfigParser
 
-
 from pkginfo import *
-
-SRC_PKG_PREFIX = "source+"
 
 class BuildCheck:
     def __init__(self):
@@ -37,48 +34,30 @@ class BuildCheck:
         path = parser.get('Archive', 'path')
         self._archive_path = path
 
-    # NOTE: We obviously want to create a cache of this and rebuild it only every 1-2h, so
-    # not every Jenkins job requests ends up in unpacking the whole archive index twice.
-    def _run_edos_builddebcheck(self, dist, comp, pkg_list, arch, useXML=False, onlyFailed=True):
+    def _run_dose_builddebcheck(self, dist, comp, arch):
+        archive_indices = []
         archive_binary_index_path = self._archive_path + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, comp, arch)
-        f = gzip.open(archive_binary_index_path, 'rb')
-        pl = f.readlines()
+        archive_indices.append(archive_binary_index_path)
         if arch == "all":
             # if arch is all, we feed the solver with a binary architecture as example, to solve dependencies on arch-specific stuff
-            archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-amd64/Packages.gz" % (dist, comp)
-            f = gzip.open(archive_binary_index_path_all, 'rb')
-            pl.extend(f.readlines())
+            archive_binary_index_path_arch = self._archive_path + "/dists/%s/%s/binary-amd64/Packages.gz" % (dist, comp)
+            archive_indices.append(archive_binary_index_path_arch)
         else:
             # any architecture canb also depend on arch:all stuff, so we add it to the loop
             archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
-            f = gzip.open(archive_binary_index_path_all, 'rb')
-            pl.extend(f.readlines())
+            archive_indices.append(archive_binary_index_path_all)
+        # append the corresponding sources information
+        archive_source_index_path = self._archive_path + "/dists/%s/%s/source/Sources.gz" % (dist, comp)
+        archive_indices.append(archive_source_index_path)
 
-        # write fake package-info for edos-debcheck
-        pkg_list_str = ""
-        for pkg in pkg_list:
-            pl.append('Package: %s%s\n' % (SRC_PKG_PREFIX, pkg.pkgname))
-            pl.append('Version: %s\n' % (pkg.version))
-            pl.append('Depends: %s\n' % (pkg.build_depends))
-            pl.append('Conflicts: %s\n' % (pkg.build_conflicts))
-            pl.append('Architecture: %s\n' % (arch))
-            pl.append("\n")
-            if pkg_list_str == "":
-                pkg_list_str = "%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
-            else:
-                pkg_list_str += ",%s%s" % (SRC_PKG_PREFIX, pkg.pkgname)
+        dose_cmd = ["edos-debcheck", "--quiet", "-e", "-f", "--summary", "--deb-native-arch=%s" % (arch)]
+        # add the archive index files
+        dose_cmd.extend(archive_indices)
 
-        edos_cmd = ["edos-debcheck"]
-        if onlyFailed:
-            edos_cmd.append("-failures")
-        if useXML:
-            edos_cmd.append("-xml")
-        edos_cmd.extend(["-explain", "-quiet", "-checkonly", pkg_list_str])
-
-        proc = subprocess.Popen(edos_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(dose_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate(input=''.join(pl))
         output = "%s\n%s" % (stdout, stderr)
-        if (proc.returncode != 0) or ("FAILED" in output) or ("Fatal" in output):
+        if (proc.returncode != 0):
             return False, output
         return True, output
 
@@ -94,19 +73,24 @@ class BuildCheck:
         src_pkg = pkg_dict[package_name]
 
         if not arch in src_pkg.installedArchs:
-            ret, info = self._run_edos_builddebcheck(dist, component, [src_pkg], arch)
-            if not ret:
-                print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, info))
-                # return code 8, which means dependency-wait
-                return 8
-            else:
+            ret, info = self._run_dose_builddebcheck(dist, component, arch)
+            doc = yaml.load(info)
+            if doc['report'] is not None:
+                for p in doc['report']:
+                    if p['package'] == ('src%3a%s' % (package_name)):
+                        print '%s %s is broken' (p['package'], p['version'])
+                        print p['reasons']
+                        print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, info))
+                        # return code 8, which means dependency-wait
+                        return 8
+
                 # yay, we can build the package!
                 return 0
 
         # apparently, we don't need to build the package
         return 1
 
-    def get_package_states_xml(self, dist, component, package_list, arch):
+    def get_package_states_yaml(self, dist, component, package_list, arch):
         query_list = []
 
         #for src_pkg in package_list:
@@ -114,7 +98,7 @@ class BuildCheck:
         #    if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
         #        query_list.append(src_pkg)
         query_list = package_list
-        ret, info = self._run_edos_builddebcheck(dist, component, query_list, arch, useXML=True, onlyFailed=False)
+        ret, info = self._run_edos_builddebcheck(dist, component, query_list, arch)
 
         return info
 
