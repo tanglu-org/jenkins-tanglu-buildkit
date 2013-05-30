@@ -50,13 +50,13 @@ class BuildCheck:
         archive_source_index_path = self._archive_path + "/dists/%s/%s/source/Sources.gz" % (dist, comp)
         archive_indices.append(archive_source_index_path)
 
-        dose_cmd = ["edos-debcheck", "--quiet", "-e", "-f", "--summary", "--deb-native-arch=%s" % (arch)]
+        dose_cmd = ["dose-builddebcheck", "--quiet", "-e", "-f", "--summary", "--deb-native-arch=%s" % (arch)]
         # add the archive index files
         dose_cmd.extend(archive_indices)
 
         proc = subprocess.Popen(dose_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate(input=''.join(pl))
-        output = "%s\n%s" % (stdout, stderr)
+        stdout, stderr = proc.communicate()
+        output = stdout
         if (proc.returncode != 0):
             return False, output
         return True, output
@@ -77,10 +77,9 @@ class BuildCheck:
             doc = yaml.load(info)
             if doc['report'] is not None:
                 for p in doc['report']:
-                    if p['package'] == ('src%3a%s' % (package_name)):
+                    if p['package'] == ('src%3a' + package_name):
                         print '%s %s is broken' (p['package'], p['version'])
-                        print p['reasons']
-                        print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, info))
+                        print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, yaml.dump(p['reasons'])))
                         # return code 8, which means dependency-wait
                         return 8
 
@@ -90,15 +89,8 @@ class BuildCheck:
         # apparently, we don't need to build the package
         return 1
 
-    def get_package_states_yaml(self, dist, component, package_list, arch):
-        query_list = []
-
-        #for src_pkg in package_list:
-        #    archs = src_pkg.archs
-        #    if ('any' in archs) or ('linux-any' in archs) or (("any-"+arch) in archs) or (arch in archs) or ("all" in archs):
-        #        query_list.append(src_pkg)
-        query_list = package_list
-        ret, info = self._run_edos_builddebcheck(dist, component, query_list, arch)
+    def get_package_states_yaml(self, dist, component, arch):
+        ret, info = self._run_dose_builddebcheck(dist, component, arch)
 
         return info
 
