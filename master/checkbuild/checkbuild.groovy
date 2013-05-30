@@ -93,9 +93,13 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	}
 
 	pkgNode = null;
+	other_version_depwait = null
 	for (p in ymlData.report) {
 		if (p.package == ('src%3a' + package_name)) {
-			pkgNode = p;
+			if (p.version == jobVersion)
+				pkgNode = p;
+			else
+				other_version_depwait = p.version;
 		}
 	}
 
@@ -105,6 +109,8 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 	if (pkgNode == null) {
 		//println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported depwait info. Scheduling build.");
+		if (other_version_depwait != null)
+			println ("Package ${package_name}, version ${other_version_depwait} is in depwait, but we are building version ${jobVersion} now.");
 		build_possible = true;
 	} else {
 		dependency_wait = true;
