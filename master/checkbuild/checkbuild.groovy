@@ -27,7 +27,17 @@ jenkinsInstance = hudson.model.Hudson.instance
 NEEDSBUILD_EXPORT_DIR = '/srv/dak/export/needsbuild';
 archList = ["all", "amd64", "i386"];
 
-// the build queue
+// load Java library to parse Yaml files
+def classLoader = ClassLoader.systemClassLoader
+while (classLoader.parent) {
+	classLoader = classLoader.parent;
+
+}
+classLoader.addURL(new URL("file:///usr/share/java/snakeyaml.jar"))
+def Yaml = Class.forName("org.yaml.snakeyaml.Yaml").newInstance();
+//
+
+// get the build queue
 queue = Hudson.getInstance().getQueue();
 qitems = queue.getItems();
 // we cache all currently running stuff, so nothing gets scheduled twice
@@ -74,23 +84,31 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (jobVersion == lastVersionBuilt)
 		return false;
 
+	// check if package should be built using the exported Yaml data
 	// check if package should be built using the exported XML data
-	def xmlData = new XmlParser().parse("${NEEDSBUILD_EXPORT_DIR}/needsbuild-${dist}-${comp}_${arch}.xml");
-	pkgNode = xmlData.package.findAll{ it.'@package' == "source+${package_name}" }
-	if (pkgNode.size() == 0) {
-		println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported needs-build info. Skipping it for now.");
+	def ymlData = Yaml.load(new FileInputStream(new File("${NEEDSBUILD_EXPORT_DIR}/depwait-${dist}-${comp}_${arch}.yml")));
+	if (ymlData['report'] == null) {
+		println ("ERROR: Invalid Yaml input!");
 		return false;
+	}
+
+	pkgNode = null;
+	for (p in ymlData.report) {
+		if (p.package == ('src%3a' + package_name)) {
+			pkgNode = p;
+		}
 	}
 
 	dependency_wait = false;
 	build_possible = false;
 	depends_hint = "";
-	res = pkgNode.'@result'[0];
-	if (res != "success") {
-  		dependency_wait = true;
-		depends_hint = pkgNode[0].text();
-	} else if (res == "success") {
+
+	if (pkgNode == null) {
+		//println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported depwait info. Scheduling build.");
 		build_possible = true;
+	} else {
+		dependency_wait = true;
+		depends_hint = Yaml.dump(pkgNode.reasons);
 	}
 
 	// prepare change of the project notes (in description of the matrix axes)
@@ -191,7 +209,7 @@ def check_and_schedule_job (project) {
 	if (buildArchs.equals(projectArchs)) {
 		// this means we can build the whole project!
 		println("Going to build ${pkg_name} (complete rebuild)");
-		queue.schedule(project, 8);
+		//! queue.schedule(project, 8);
 	} else {
 		for (arch in buildArchs) {
 			println("Going to build ${pkg_name} on ${arch}");
@@ -200,7 +218,7 @@ def check_and_schedule_job (project) {
 			//raction.setBaseBuildNumber(mbuild.getNumber());
 			raction.addConfiguration( matrix.Combination.fromString("Architecture=arch-"+arch), true);
 
-			queue.schedule(project, 8, raction);
+			//! queue.schedule(project, 8, raction);
 
 			//buildConfig.scheduleBuild2(8,
 			//                           new Cause.RemoteCause("archive-master", "New version of this package is buildable."),

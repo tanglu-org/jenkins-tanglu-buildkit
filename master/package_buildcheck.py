@@ -78,8 +78,7 @@ class BuildCheck:
             if doc['report'] is not None:
                 for p in doc['report']:
                     if p['package'] == ('src%3a' + package_name):
-                        print '%s %s is broken' (p['package'], p['version'])
-                        print("Package '%s' has unsatisfiable dependencies on %s:\n%s" % (package_name, arch, yaml.dump(p['reasons'])))
+                        print("Package '%s (%s)' has unsatisfiable dependencies on %s:\n%s" % (package_name, p['version'], arch, yaml.dump(p['reasons'])))
                         # return code 8, which means dependency-wait
                         return 8
 

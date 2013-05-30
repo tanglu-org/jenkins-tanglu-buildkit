@@ -115,8 +115,8 @@ class BuildJobUpdater:
         all_archs = self._supportedArchs
         all_archs.append("all")
         for arch in all_archs:
-            yaml_data = bcheck.get_package_states_xml(dist, component, arch)
-            yaml_file = open("%s/needsbuild-%s-%s_%s.yml" % (NEEDSBUILD_EXPORT_DIR, dist, component, arch), "w")
+            yaml_data = bcheck.get_package_states_yaml(dist, component, arch)
+            yaml_file = open("%s/depwait-%s-%s_%s.yml" % (NEEDSBUILD_EXPORT_DIR, dist, component, arch), "w")
             yaml_file.write(yaml_data)
             yaml_file.close()
 
