@@ -34,7 +34,7 @@ while (classLoader.parent) {
 
 }
 classLoader.addURL(new URL("file:///usr/share/java/snakeyaml.jar"))
-def Yaml = Class.forName("org.yaml.snakeyaml.Yaml").newInstance();
+Yaml = Class.forName("org.yaml.snakeyaml.Yaml").newInstance();
 //
 
 // get the build queue
@@ -108,7 +108,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 		build_possible = true;
 	} else {
 		dependency_wait = true;
-		depends_hint = Yaml.dump(pkgNode.reasons);
+		depends_hint = Yaml.dump(pkgNode.reasons).replace(" ", "&nbsp;");
 	}
 
 	// prepare change of the project notes (in description of the matrix axes)
@@ -148,7 +148,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 		// add an information to the main project description too
 
 		if (pdesc_complete.indexOf("Status: DEPWAIT") >= 0) {
-			if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") <= 0) {
+			if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") < 0) {
 				// apparently the other arch is in depwait too, so add ours now
 				pdesc = pdesc_complete + "<br/>Status: DEPWAIT (${arch})";
 			}
