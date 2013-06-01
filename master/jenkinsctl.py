@@ -232,7 +232,12 @@ class JenkinsBridge:
                 self._rename_job(oldJobName, jobName)
                 self.currentJobs.remove(oldJobName)
 
-                self._update_job(jobName, jobXML)
+                # NOTE: Ugly workaround to make the cannot-rename-job-while-building issue less annoying
+                try:
+                    self._update_job(jobName, jobXML)
+                except:
+                    print("*** Can not update job (maybe it is building?): %s ***" % (jobName))
+                    return False
 
                 self.currentJobs.append(jobName)
                 self.jobInfoDict[jobIdentifier] = [pkgversion, jobName]
