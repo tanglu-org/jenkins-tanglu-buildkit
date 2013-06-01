@@ -68,7 +68,17 @@ class PackageInfoRetriever():
         for arch in self._supportedArchs:
             if arch in pkg.installedArchs:
                 continue
-            # test the caches
+
+            # check if package file is in the archive (faster than checking the caches)
+            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
+            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
+
+            if os.path.isfile(expectedPackagePath):
+                pkg.installedArchs.append(arch)
+                continue
+
+            # if package file was not found, ensure that it is missing by checking the caches
+            # (this also catches binNMUs and other weird things)
             pkg_id = "%s_%s" % (binaryName, arch)
             if pkg_id in self._installedPkgs:
                 existing_pkgversion = self._installedPkgs[pkg_id]
@@ -80,13 +90,7 @@ class PackageInfoRetriever():
                     pkg.installedArchs.append(arch)
                     continue
 
-            # if package was not in cache, ensure that it is missing by checking the archive directly
-            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
-            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
-            if os.path.isfile(expectedPackagePath):
-                pkg.installedArchs.append(arch)
-                continue
 
 
     def get_packages_for(self, dist, component):
