@@ -51,11 +51,11 @@ class BuildCheck:
 
     def _run_dose_builddebcheck(self, dist, comp, arch):
         # we always need main components
-        archive_indices = self._get_binary_indices_main(dist, "main", arch)
+        archive_indices = self._get_binary_indices_list(dist, "main", arch)
         if comp != "main":
             # if the component is not main, add it to the list
-            comp_indices = self._get_binary_indices_main(dist, comp, arch)
-            archive_indices.append(comp_indices)
+            comp_indices = self._get_binary_indices_list(dist, comp, arch)
+            archive_indices.extend(comp_indices)
 
         # append the corresponding sources information
         archive_source_index_path = self._archive_path + "/dists/%s/%s/source/Sources.gz" % (dist, comp)
