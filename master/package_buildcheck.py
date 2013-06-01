@@ -93,6 +93,7 @@ class BuildCheck:
                         # return code 8, which means dependency-wait
                         return 8
                 if force_buildcheck:
+                    printf("All build-dependencies are satisfied.")
                     # if we forced a buildcheck and did not find a problem, check again if we really need to build the package
                     if not arch in src_pkg.installedArchs:
                         return 0
