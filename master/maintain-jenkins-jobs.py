@@ -93,7 +93,8 @@ class BuildJobUpdater:
                 continue
 
             # packages for arch:all are built on amd64, we don't need an extra build slot for them if it is present
-            buildArchs = pkgArchs
+            # we need to eliminate possible duplicate arch enties first, so we don't add duplicate archs (or amd64 and all together in one package)
+            buildArchs = archs = list(set(pkgArchs))
             if ("amd64" in buildArchs) and ("all" in buildArchs):
                 buildArchs.remove("all")
 

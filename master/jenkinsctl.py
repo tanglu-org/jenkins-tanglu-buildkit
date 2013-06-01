@@ -110,7 +110,7 @@ class JenkinsBridge:
         # Create the information html
         info_html = info.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
         if component != "main":
-            info_html = info_html + "<br/><br/><strong>This package is part of the <em>%s</em> depertment!</strong>" % (component)
+            info_html = info_html + "<br/><br/><strong>This package is part of the <em>%s</em> department!</strong>" % (component)
         info_html = info_html + "<br/><br/>"
 
         archs_xml = ""

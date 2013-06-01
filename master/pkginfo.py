@@ -109,6 +109,10 @@ class PackageInfoRetriever():
                 archs = archs_str.split(' ')
             else:
                 archs = [archs_str]
+            # remove duplicate archs from list
+            # this is very important, because we otherwise will add duplicate build requests in Jenkins
+            archs = list(set(archs))
+
             pkg = PackageInfo(pkgname, pkgversion, dist, component, archs)
 
             pkg.info = ("Package: %s\nBinary Packages: %s\nMaintainer: %s\nCo-Maintainers: %s\nVCS-Browser: %s" %
@@ -139,7 +143,6 @@ class PackageInfoRetriever():
             source_path = self._archivePath + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, component, arch)
             f = gzip.open(source_path, 'rb')
             tagf = TagFile (f)
-            packageList = []
             for section in tagf:
                 pkgversion = section['Version']
                 pkgname = section['Package']
