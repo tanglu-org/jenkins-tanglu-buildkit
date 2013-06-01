@@ -72,7 +72,7 @@ class BuildCheck:
             return False, output
         return True, output
 
-    def check_build(self, dist, component, package_name, arch):
+    def check_build(self, dist, component, package_name, arch, force_buildcheck=False):
         pkgList = self._pkginfo.get_packages_for(dist, component)
         pkg_dict = self._pkginfo.package_list_to_dict(pkgList)
         # NOTE: The dictionary always contains the most recent pkg version
@@ -83,7 +83,7 @@ class BuildCheck:
             return 1
         src_pkg = pkg_dict[package_name]
 
-        if not arch in src_pkg.installedArchs:
+        if (not arch in src_pkg.installedArchs) or (force_buildcheck):
             ret, info = self._run_dose_builddebcheck(dist, component, arch)
             doc = yaml.load(info)
             if doc['report'] is not None:
@@ -92,7 +92,12 @@ class BuildCheck:
                         print("Package '%s (%s)' has unsatisfiable dependencies on %s:\n%s" % (package_name, p['version'], arch, yaml.dump(p['reasons'])))
                         # return code 8, which means dependency-wait
                         return 8
-
+                if force_buildcheck:
+                    # if we forced a buildcheck and did not find a problem, check again if we really need to build the package
+                    if not arch in src_pkg.installedArchs:
+                        return 0
+                    else:
+                        return 1
                 # yay, we can build the package!
                 return 0
 
@@ -112,6 +117,9 @@ def main():
     parser.add_option("-c", "--check",
                   action="store_true", dest="check", default=False,
                   help="check if the given package name can be built (returns 1 if not, 8 if dep-wait, 0 if build should be scheduled)")
+    parser.add_option("--force-buildcheck",
+                  action="store_true", dest="force_buildcheck", default=False,
+                  help="enforce a check for build dependencies")
 
     (options, args) = parser.parse_args()
 
@@ -124,7 +132,7 @@ def main():
         package_name = args[2]
         arch = args[3]
         bc = BuildCheck()
-        code = bc.check_build(dist, comp, package_name, arch)
+        code = bc.check_build(dist, comp, package_name, arch, force_buildcheck=options.force_buildcheck)
         if code == 1:
             print("There is no need to build this package.")
         if code == 0:
