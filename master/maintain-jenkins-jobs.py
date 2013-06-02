@@ -105,7 +105,7 @@ class BuildJobUpdater:
                 if self.debugMode:
                         print("INFO: Skipping %s, package not created/updated (higher version available?)" % (pkg.pkgname))
 
-            for arch in pkgArchs:
+            for arch in buildArchs:
                 if not arch in pkg.installedArchs:
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
