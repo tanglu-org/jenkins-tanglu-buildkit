@@ -67,6 +67,8 @@ class BuildJobUpdater:
 
         for pkg in pkgList:
             archs = self._filterUnsupportedArchs(pkg.archs)
+            # remove duplicates
+            archs = list(set(archs))
 
             # check if this is an arch:all package
             if archs == ["all"]:
@@ -94,7 +96,7 @@ class BuildJobUpdater:
 
             # packages for arch:all are built on amd64, we don't need an extra build slot for them if it is present
             # we need to eliminate possible duplicate arch enties first, so we don't add duplicate archs (or amd64 and all together in one package)
-            buildArchs = archs = list(set(pkgArchs))
+            buildArchs = list(set(pkgArchs))
             if ("amd64" in buildArchs) and ("all" in buildArchs):
                 buildArchs.remove("all")
 
