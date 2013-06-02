@@ -202,6 +202,13 @@ def check_and_schedule_job (project) {
 	if (buildArchs.isEmpty())
 		return;
 
+	// get all archs this project can be built on
+	projectArchs = []
+	for (arch in archList) {
+		if (project.getItem("Architecture=arch-${arch}") != null)
+			projectArchs.add(arch);
+	}
+
 	masterDesc = project.getDescription();
 
 	def match = masterDesc =~ "Identifier:(.*)<br/>";
@@ -221,7 +228,7 @@ def check_and_schedule_job (project) {
 	scheduledArchs = [];
 	for (arch in buildArchs) {
 		// sanity check
-		if (project.getItem("Architecture=arch-${arch}") == null)
+		if (!arch in projectArchs)
 			continue;
 
 		if (perform_buildcheck (dist, comp, pkg_name, arch)) {
@@ -230,15 +237,13 @@ def check_and_schedule_job (project) {
 				println("Skipping ${pkg_name} (on ${arch}), a package job is already in queue.");
 				continue;
 			} else {
-
+				// add arch to to-be-built archlist
+				scheduledArchs.add(arch);
 			}
-
-			// add arch to to-be-built archlist
-			scheduledArchs.add(arch);
 		}
 	}
 
-	if (scheduledArchs.equals(buildArchs)) {
+	if (scheduledArchs.equals(projectArchs)) {
 		// this means we can build the whole project!
 		println("Going to build ${pkg_name} (complete rebuild)");
 		queue.schedule(project, 8);
