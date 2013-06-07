@@ -94,8 +94,11 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	}
 
 	// we only need to run a build-check if we haven't already built the current version
-	if (jobVersion == lastVersionBuilt)
-		return false;
+	if (jobVersion == lastVersionBuilt) {
+		// Remove the commet to rebuild all failed jobs
+		//! if ((build.result == Result.SUCCESS) || (build.result == Result.ABORTED))
+			return false;
+	}
 
 	// check if package should be built using the exported Yaml data
 	// check if package should be built using the exported XML data
