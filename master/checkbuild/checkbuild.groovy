@@ -160,7 +160,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 		// reset the main description, if necessary (only reset it if no arch is in DEPWAIT anymore)
 		if (pdesc_complete.indexOf("Status: DEPWAIT (${arch})") >= 0)
 			pdesc = pdesc.replace("Status: DEPWAIT (${arch})", "");
- 		if (pdesc_complete.indexOf("Status: DEPWAIT") <= 0)
+ 		if (pdesc_complete.indexOf("Status: DEPWAIT") < 0)
 			pdesc = pdesc + '<br/>----<br/><br>There are no notes about this package.';
 		project.setDescription(pdesc);
 
