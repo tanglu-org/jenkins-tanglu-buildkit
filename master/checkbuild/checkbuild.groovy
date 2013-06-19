@@ -100,9 +100,13 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 			return false;
 	}
 
+	// arch-real is the architecture we actually build on (only used here for the dependency check)
+	arch_real = arch;
+	if (arch_real == "all")
+		arch_real = "amd64";
+
 	// check if package should be built using the exported Yaml data
-	// check if package should be built using the exported XML data
-	def ymlData = Yaml.load(new FileInputStream(new File("${NEEDSBUILD_EXPORT_DIR}/depwait-${dist}-${comp}_${arch}.yml")));
+	def ymlData = Yaml.load(new FileInputStream(new File("${NEEDSBUILD_EXPORT_DIR}/depwait-${dist}-${comp}_${arch_real}.yml")));
 	if (ymlData['report'] == null) {
 		println ("ERROR: Invalid Yaml input!");
 		return false;
