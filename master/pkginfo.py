@@ -53,7 +53,7 @@ class PackageInfoRetriever():
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         path = parser.get('Archive', 'path')
-        indices_path = parser.get('Archive', 'indices')
+        export_path = parser.get('Archive', 'export_dir')
         self._archivePath = path
         self._archiveComponents = parser.get('Archive', 'components').split (" ")
         self._archiveDists = parser.get('Archive', 'dists').split (" ")
@@ -64,7 +64,7 @@ class PackageInfoRetriever():
         # to speed up source-fetching and to kill packages without maintainer immediately, we include the pkg-maintainer
         # mapping, to find out active source/binary packages (currently, only source packages are filtered)
         self._activePackages = []
-        for line in open(indices_path + "/Maintainers"):
+        for line in open(export_path + "/SourceMaintainers"):
            pkg_m = line.strip ().split (" ", 1)
            if len (pkg_m) > 1:
                self._activePackages.append(pkg_m[0].strip())
