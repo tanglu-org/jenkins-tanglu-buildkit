@@ -53,12 +53,21 @@ class PackageInfoRetriever():
         parser = SafeConfigParser()
         parser.read(['/etc/jenkins/jenkins-dak.conf', 'jenkins-dak.conf'])
         path = parser.get('Archive', 'path')
+        indices_path = parser.get('Archive', 'indices')
         self._archivePath = path
         self._archiveComponents = parser.get('Archive', 'components').split (" ")
         self._archiveDists = parser.get('Archive', 'dists').split (" ")
         self._supportedArchs = parser.get('Archive', 'archs').split (" ")
         self._supportedArchs.append("all")
         self._installedPkgs = {}
+
+        # to speed up source-fetching and to kill packages without maintainer immediately, we include the pkg-maintainer
+        # mapping, to find out active source/binary packages (currently, only source packages are filtered)
+        self._activePackages = []
+        for line in open(indices_path + "/Maintainers"):
+           pkg_m = line.strip ().split (" ", 1)
+           if len (pkg_m) > 1:
+               self._activePackages.append(pkg_m[0].strip())
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
@@ -105,10 +114,13 @@ class PackageInfoRetriever():
             if section.get('Extra-Source-Only', 'no') == 'yes':
                 pass
 
+            pkgname = section['Package']
+            if not pkgname in self._activePackages:
+                pass
             archs_str = section['Architecture']
             binaries = section['Binary']
             pkgversion = section['Version']
-            pkgname = section['Package']
+
             if ' ' in archs_str:
                 archs = archs_str.split(' ')
             else:
