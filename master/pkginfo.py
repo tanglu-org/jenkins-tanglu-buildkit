@@ -100,8 +100,6 @@ class PackageInfoRetriever():
                     continue
 
 
-
-
     def get_packages_for(self, dist, component):
         # create a cache of all installed packages on the different architectures
         self._build_installed_pkgs_cache(dist, component)
@@ -112,11 +110,11 @@ class PackageInfoRetriever():
         for section in tagf:
             # don't even try to build source-only packages
             if section.get('Extra-Source-Only', 'no') == 'yes':
-                pass
+                continue
 
             pkgname = section['Package']
             if not pkgname in self._activePackages:
-                pass
+                continue
             archs_str = section['Architecture']
             binaries = section['Binary']
             pkgversion = section['Version']
