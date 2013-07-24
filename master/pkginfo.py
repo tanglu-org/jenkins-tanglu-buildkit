@@ -31,8 +31,8 @@ def noEpoch(version):
 
 class PackageInfo():
     def __init__(self, pkgname, pkgversion, dist, component, archs):
-        self.pkgname = pkgname
-        self.version = pkgversion
+        self.pkgname = pkgname.strip()
+        self.version = pkgversion.strip()
         self.dist = dist
         self.component = component
         self.archs = archs
@@ -71,18 +71,21 @@ class PackageInfoRetriever():
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
-        if "-udeb" in binaryName:
-            fileExt = "udeb"
-
         for arch in self._supportedArchs:
             if arch in pkg.installedArchs:
                 continue
 
             # check if package file is in the archive (faster than checking the caches)
-            binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
-            expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
+            binaryExists = False
+            for fileExt in ["deb", "udeb"]:
+                binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
+                expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
 
-            if os.path.isfile(expectedPackagePath):
+                if os.path.isfile(expectedPackagePath):
+                    binaryExists = True
+                    break
+
+            if binaryExists:
                 pkg.installedArchs.append(arch)
                 continue
 
