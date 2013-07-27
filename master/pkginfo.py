@@ -72,7 +72,7 @@ class PackageInfoRetriever():
         # create a cache of all installed packages on the different architectures
         for dist in self._archiveDists:
             for comp in self._archiveComponents:
-                self._build_installed_pkgs_cache(dist, comp)
+                self._build_installed_pkgs_cache_dist(dist, comp)
 
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
