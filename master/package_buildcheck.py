@@ -47,6 +47,10 @@ class BuildCheck:
             archive_binary_index_path_all = self._archive_path + "/dists/%s/%s/binary-all/Packages.gz" % (dist, comp)
             archive_indices.append(archive_binary_index_path_all)
 
+        if dist == "staging":
+            # staging needs the aequorea data (it is no complete dist)
+            archive_indices.extend(self._get_binary_indices_list("aequorea", comp, arch))
+
         return archive_indices
 
     def _run_dose_builddebcheck(self, dist, comp, arch):
