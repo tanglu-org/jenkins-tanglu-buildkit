@@ -69,11 +69,6 @@ class PackageInfoRetriever():
            if len (pkg_m) > 1:
                self._activePackages.append(pkg_m[0].strip())
 
-        # create a cache of all installed packages on the different architectures
-        for dist in self._archiveDists:
-            for comp in self._archiveComponents:
-                self._build_installed_pkgs_cache_dist(dist, comp)
-
     def _set_pkg_installed_for_arch(self, dirname, pkg, binaryName):
         fileExt = "deb"
         for arch in self._supportedArchs:
@@ -109,6 +104,8 @@ class PackageInfoRetriever():
 
 
     def get_packages_for(self, dist, component):
+        # create a cache of all installed packages on the different architectures
+        self._build_installed_pkgs_cache(dist, component)
         source_path = self._archivePath + "/dists/%s/%s/source/Sources.gz" % (dist, component)
         f = gzip.open(source_path, 'rb')
         tagf = TagFile (f)
@@ -158,12 +155,15 @@ class PackageInfoRetriever():
 
         return packageList
 
-    def _build_installed_pkgs_cache_dist(self, dist, component):
+    def _build_installed_pkgs_cache(self, dist, component):
         for arch in self._supportedArchs:
             source_path = self._archivePath + "/dists/%s/%s/binary-%s/Packages.gz" % (dist, component, arch)
             f = gzip.open(source_path, 'rb')
             tagf = TagFile (f)
             for section in tagf:
+                # make sure we have the right arch (closes bug in installed-detection)
+                if section['Architecture'] != arch:
+                    continue
                 pkgversion = section['Version']
                 pkgname = section['Package']
                 pkid = "%s_%s" % (pkgname, arch)
