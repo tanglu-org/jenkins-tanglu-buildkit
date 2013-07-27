@@ -91,16 +91,16 @@ class PackageInfoRetriever():
 
             # if package file was not found, ensure that it is missing by checking the caches
             # (this also catches binNMUs and other weird things)
-            pkg_id = "%s_%s" % (binaryName, arch)
-            if pkg_id in self._installedPkgs:
-                existing_pkgversion = self._installedPkgs[pkg_id]
-                if pkg.version == existing_pkgversion:
-                    pkg.installedArchs.append(arch)
-                    continue
-                # try to catch binNMUed packages from Debian
-                if re.match(re.escape(pkg.version) + "\+b\d$", existing_pkgversion):
-                    pkg.installedArchs.append(arch)
-                    continue
+            #pkg_id = "%s_%s" % (binaryName, arch)
+            #if pkg_id in self._installedPkgs:
+            #    existing_pkgversion = self._installedPkgs[pkg_id]
+            #    if pkg.version == existing_pkgversion:
+            #        pkg.installedArchs.append(arch)
+            #        continue
+            #    # try to catch binNMUed packages from Debian
+            #    if re.match(re.escape(pkg.version) + "\+b\d$", existing_pkgversion):
+            #        pkg.installedArchs.append(arch)
+            #        continue
 
 
     def get_packages_for(self, dist, component):
