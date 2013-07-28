@@ -12,15 +12,22 @@ http://archive.tanglu.org/tanglu/pool/main/t/tanglu-archive-keyring/tanglu-archi
 (install local packages using dpkg)
 
 === 2. Create base environment ===
-Create a base cowbuilder environment using one of the following commands:
+Create a base cowbuilder environment (for the aequorea curent development branch) using one of the following commands:
  :: i386 builder on amd64 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-aequorea-i386.cow --distribution aequorea --debootstrapopts --arch --debootstrapopts i386 --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --debootstrapopts --arch --debootstrapopts i386 --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
  :: amd64 builder on amd64 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-aequorea-amd64.cow --distribution aequorea --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-amd64.cow --distribution aequorea --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
  :: i386 builder on i386 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-aequorea-i386.cow --distribution aequorea --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+
+Then log into the newly created environment:
+ cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-staging-*.cow
+then open /etc/apt/sources.list and add the following lines:
+ deb http://archive.tanglu.org/tanglu staging main contrib non-free
+ #deb-src http://archive.tanglu.org/tanglu staging main contrib non-free
+That's it, the build-environment is set up.
 
 === 3. Set up buildd user ===
 Create new buildd user:
