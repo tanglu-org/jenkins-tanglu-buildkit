@@ -107,7 +107,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 	// check if package should be built using the exported Yaml data
 	def ymlData = Yaml.load(new FileInputStream(new File("${NEEDSBUILD_EXPORT_DIR}/depwait-${dist}-${comp}_${arch_real}.yml")));
-	if (ymlData['report'] == null) {
+	if ((ymlData['background-packages'] == null) || (ymlData['background-packages'] == "")){
 		println ("ERROR: Invalid Yaml input!");
 		return false;
 	}
