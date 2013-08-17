@@ -97,11 +97,6 @@ class PackageInfoRetriever():
                 if pkg.version == existing_pkgversion:
                     pkg.installedArchs.append(arch)
                     continue
-                # try to catch binNMUed packages from Debian
-                if re.match(re.escape(pkg.version) + "\+b\d$", existing_pkgversion):
-                    pkg.installedArchs.append(arch)
-                    continue
-
 
     def get_packages_for(self, dist, component):
         # create a cache of all installed packages on the different architectures
@@ -166,6 +161,14 @@ class PackageInfoRetriever():
                     continue
                 pkgversion = section['Version']
                 pkgname = section['Package']
+                pkgsource = section['Source']
+                # if source has different version, we cheat and set the binary pkg version
+                # to the source package version
+                if "(" in pkgsource:
+                    m = re.search(r"\((\w+)\)", pkgsource)
+                    s = m.group(1).strip()
+                    if s != "":
+                        pkgversion = s
                 pkid = "%s_%s" % (pkgname, arch)
                 if pkid in self._installedPkgs:
                    regVersion = self._installedPkgs[pkid]

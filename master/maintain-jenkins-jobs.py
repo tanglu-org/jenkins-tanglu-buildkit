@@ -100,6 +100,9 @@ class BuildJobUpdater:
 
             for arch in buildArchs:
                 if not arch in pkg.installedArchs:
+                    # safety check, to not build stuff twice
+                    if (arch == "amd64") and ("all" in pkg.installedArchs):
+                        continue
                     if self.debugMode:
                         print("Package %s not built for %s!" % (pkg.pkgname, arch))
                     needsbuild_list.write("%s_%s [%s]\n" % (pkg.pkgname, pkg.getVersionNoEpoch(), arch))
