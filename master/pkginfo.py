@@ -157,7 +157,8 @@ class PackageInfoRetriever():
             tagf = TagFile (f)
             for section in tagf:
                 # make sure we have the right arch (closes bug in installed-detection)
-                pkg_arch = section['Architecture']
+                if section['Architecture'] != arch:
+                    continue
 
                 pkgversion = section['Version']
                 pkgname = section['Package']
@@ -169,7 +170,7 @@ class PackageInfoRetriever():
                     s = m.group(1).strip()
                     if s != "":
                         pkgversion = s
-                pkid = "%s_%s" % (pkgname, pkg_arch)
+                pkid = "%s_%s" % (pkgname, arch)
                 if pkid in self._installedPkgs:
                    regVersion = self._installedPkgs[pkid]
                    compare = version_compare(regVersion, pkgversion)
