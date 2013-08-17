@@ -157,19 +157,19 @@ class PackageInfoRetriever():
             tagf = TagFile (f)
             for section in tagf:
                 # make sure we have the right arch (closes bug in installed-detection)
-                if section['Architecture'] != arch:
-                    continue
+                pkg_arch = section['Architecture']
+
                 pkgversion = section['Version']
                 pkgname = section['Package']
-                pkgsource = section['Source']
+                pkgsource = section.get('Source', '')
                 # if source has different version, we cheat and set the binary pkg version
                 # to the source package version
                 if "(" in pkgsource:
-                    m = re.search(r"\((\w+)\)", pkgsource)
+                    m = re.search(r"\((.*)\)", pkgsource)
                     s = m.group(1).strip()
                     if s != "":
                         pkgversion = s
-                pkid = "%s_%s" % (pkgname, arch)
+                pkid = "%s_%s" % (pkgname, pkg_arch)
                 if pkid in self._installedPkgs:
                    regVersion = self._installedPkgs[pkid]
                    compare = version_compare(regVersion, pkgversion)
