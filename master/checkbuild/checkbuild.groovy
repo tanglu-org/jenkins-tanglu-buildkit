@@ -95,7 +95,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 
 	// we only need to run a build-check if we haven't already built the current version
 	if (jobVersion == lastVersionBuilt) {
-		// Remove the commet to rebuild all failed jobs
+		// Remove the comment to rebuild all failed jobs
 		//! if ((build.result == Result.SUCCESS) || (build.result == Result.ABORTED))
 			return false;
 	}
@@ -130,7 +130,7 @@ def perform_buildcheck (dist, comp, package_name, arch) {
 	if (pkgNode == null) {
 		//println ("Unable to find ${package_name} (${dist}, ${comp}, ${arch}) in exported depwait info. Scheduling build.");
 		if (other_version_depwait != null)
-			println ("Package ${package_name}, version ${other_version_depwait} is in depwait on ${arch}, but we can build version ${jobVersion} on ${arch} now.");
+			println ("Package ${package_name}, version ${other_version_depwait} is in depwait on ${arch}, but version ${jobVersion} needs to be built.");
 		build_possible = true;
 	} else {
 		dependency_wait = true;
