@@ -74,27 +74,31 @@ class PackageInfoRetriever():
             if arch in pkg.installedArchs:
                 continue
 
-            # check if package file is in the archive
-#            binaryExists = False
-#            for fileExt in ["deb", "udeb"]:
-#                binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
-#                expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
-#
-#                if os.path.isfile(expectedPackagePath):
-#                    binaryExists = True
-#                    break
-#
-#            if binaryExists:
-#                pkg.installedArchs.append(arch)
-#                continue
-
-            # if package file was not found, ensure that it is missing by checking the caches
+            # check caches for installed package
             pkg_id = "%s_%s" % (binaryName, arch)
             if pkg_id in self._installedPkgs:
                 existing_pkgversion = self._installedPkgs[pkg_id]
                 if pkg.version == existing_pkgversion:
                     pkg.installedArchs.append(arch)
                     continue
+
+            # we also check if the package file is still installed in pool.
+            # this reduces the amount of useless rebuild requests, because if there is still
+            # a binary package in pool, the newly built package with the same version will be rejected
+            # anyway.
+            # This doesn't catch all corner-cases (e.g. different binary-versions), but it's better than nothing.
+            binaryExists = False
+            for fileExt in ["deb", "udeb"]:
+                binaryPkgName = "%s_%s_%s.%s" % (binaryName, pkg.getVersionNoEpoch(), arch, fileExt)
+                expectedPackagePath = self._archivePath + "/%s/%s" % (dirname, binaryPkgName)
+
+                if os.path.isfile(expectedPackagePath):
+                    binaryExists = True
+                    break
+
+            if binaryExists:
+                pkg.installedArchs.append(arch)
+                continue
 
     def get_packages_for(self, dist, component):
         # create a cache of all installed packages on the different architectures
