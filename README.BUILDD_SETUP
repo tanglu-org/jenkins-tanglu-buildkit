@@ -27,6 +27,8 @@ Then log into the newly created environment:
 then open /etc/apt/sources.list and add the following lines:
  deb http://archive.tanglu.org/tanglu staging main contrib non-free
  #deb-src http://archive.tanglu.org/tanglu staging main contrib non-free
+Next, create the build user:
+ adduser --quiet --system --home /var/cache/buildd --no-create-home buildd
 That's it, the build-environment is set up.
 
 === 3. Set up buildd user ===
