@@ -10,6 +10,6 @@ install_packages lintian
 
 echo "+++ lintian output +++"
 
-lintian -IE --show-overrides /tmp/buildd/*.changes
+HOME=/tmp/lintian_home su -mc "cd /tmp && lintian -I --show-overrides /tmp/buildd/*.changes; :" - buildd
 
 echo "+++ end of lintian output +++"

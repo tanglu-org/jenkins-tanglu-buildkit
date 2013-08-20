@@ -68,6 +68,7 @@ mkdir /srv/buildd/logs
 Add the following lines to your pbuilderrc in /etc:
  BUILDUSERNAME=buildd
  BUILDUSERID=$(grep $BUILDUSERNAME /etc/passwd | cut -d: -f3)
+
  # work around bug#677666
  USER=buildd
  USERNAME=buildd
