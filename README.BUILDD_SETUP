@@ -62,29 +62,14 @@ Also, set KEY_ID to the ID of your GPG-key.
 Create the log directory:
 mkdir /srv/buildd/logs
 
-=== 8. Configure dput ===
-Login as buildd, create ~/.dput.cf with the following content:
+=== 8. Set up eatmydata & add pbuilder config ===
+Add the following lines to your pbuilderrc in /etc:
+ BUILDUSERNAME=buildd
+ EXTRAPACKAGES="lintian"
+ export DEB_BUILD_OPTIONS="parallel=5"
 
-[tanglu-ftpmaster]
-fqdn = ftp-master.tanglu.org
-method = ftp
-incoming = ~/incoming/
-login = anonymous
+Adjust the number behind "parallel" to number of cpus+1 to match your builder.
 
-=== 9. Add ssh key ===
-As user buildd, edit ~/.ssh/authorized_keys and add the following content:
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/vbEIRu4YOgQfMYZ9anR+t5WlEsqDeYmI0+sAsdYcnec0WfWppSDdHwBrO4KCMEmV5BnvzS4/yVQM9Ib56kmGYl5Kb4Qc0fBHKZDY6n5oozXdFdFPKTjwXFfku1QZjr6FU7gTPywiciTNQzB/5IRqr6BXdsTRGiodJe8Gp7Trq4bKJSANdybvaZ4quWOojd3e0kZ7Xa8cVJh2vHuLtMD1rMl37qDrwTo9pUtXkJxNpd/shJrcO+NfhB2BVEDNGf4gD4OWBQNLFsGoZfeqtOzr54AQeM2abWyx0R4lFCkCCQGaQfLytHc1pjuI7ZPeubDCDz2+1Rs2QliFNbR4Cywn buildmaster@buildd.tanglu.org
-
-(one line)
-This will make the buildd accessible by the build-master.
-
-=== 10. Register the buildd ===
-Tell the build-master admin (currently Matthias Klumpp <mak@debian.org>) about the new buildd and give him access to the machine.
-The build-master admin will check the generic settings and perform a testbuild, then add the machine to the buildd pool and register it's key
-with the archive kit.
-The build-aster will copy a lot of files around during build, and will constantly monitor the buildd.
-
-=== EXTRA: Set up eatmydata ===
 For faster builds, configure eatmydata:
  cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-aequorea-amd64.cow
  apt-get install eatmydata
@@ -98,5 +83,27 @@ else
 fi
 
 export LD_PRELOAD
+
+=== 9. Configure dput ===
+Login as buildd, create ~/.dput.cf with the following content:
+
+[tanglu-ftpmaster]
+fqdn = ftp-master.tanglu.org
+method = ftp
+incoming = ~/incoming/
+login = anonymous
+
+=== 10. Add ssh key ===
+As user buildd, edit ~/.ssh/authorized_keys and add the following content:
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/vbEIRu4YOgQfMYZ9anR+t5WlEsqDeYmI0+sAsdYcnec0WfWppSDdHwBrO4KCMEmV5BnvzS4/yVQM9Ib56kmGYl5Kb4Qc0fBHKZDY6n5oozXdFdFPKTjwXFfku1QZjr6FU7gTPywiciTNQzB/5IRqr6BXdsTRGiodJe8Gp7Trq4bKJSANdybvaZ4quWOojd3e0kZ7Xa8cVJh2vHuLtMD1rMl37qDrwTo9pUtXkJxNpd/shJrcO+NfhB2BVEDNGf4gD4OWBQNLFsGoZfeqtOzr54AQeM2abWyx0R4lFCkCCQGaQfLytHc1pjuI7ZPeubDCDz2+1Rs2QliFNbR4Cywn buildmaster@buildd.tanglu.org
+
+(one line)
+This will make the buildd accessible by the build-master.
+
+=== 11. Register the buildd ===
+Tell the build-master admin (currently Matthias Klumpp <mak@debian.org>) about the new buildd and give him access to the machine.
+The build-master admin will check the generic settings and perform a testbuild, then add the machine to the buildd pool and register it's key
+with the archive kit.
+The build-aster will copy a lot of files around during build, and will constantly monitor the buildd.
 
 And you're done! Check if builds work before disabling maintenance mode on the buildmaster!
