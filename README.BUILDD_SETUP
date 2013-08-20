@@ -67,6 +67,11 @@ mkdir /srv/buildd/logs
 === 8. Set up eatmydata & add pbuilder config ===
 Add the following lines to your pbuilderrc in /etc:
  BUILDUSERNAME=buildd
+ BUILDUSERID=$(grep $BUILDUSERNAME /etc/passwd | cut -d: -f3)
+ # work around bug#677666
+ USER=buildd
+ USERNAME=buildd
+
  EXTRAPACKAGES="lintian"
  export DEB_BUILD_OPTIONS="parallel=5"
 
