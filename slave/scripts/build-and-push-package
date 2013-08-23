@@ -356,8 +356,7 @@ binaries_to_workspace() {
   rmdir "${WORKSPACE}/binaries/"
 }
 
-# copy results to dput directory
-request_build_upload() {
+request_build_result_upload() {
   count=`ls -1 *.changes 2>/dev/null | wc -l`
   if [ $count == 0 ]
   then
@@ -367,6 +366,19 @@ request_build_upload() {
   for changesfile in "${WORKSPACE}/"*.changes
   do
     request-package-upload tanglu-ftpmaster $changesfile
+  done
+}
+
+upload_build_result() {
+  count=`ls -1 *.changes 2>/dev/null | wc -l`
+  if [ $count == 0 ]
+  then
+    echo "*** There are no files to upload! ***"
+  fi
+
+  for changesfile in "${WORKSPACE}/"*.changes
+  do
+    dput tanglu-ftpmaster $changesfile
   done
 }
 
@@ -387,7 +399,12 @@ cowbuilder_run
 sign_result
 
 binaries_to_workspace
-request_build_upload
+# FIXME: Since Jenkins doesn't show upload failures at time,
+# it is more useful to include the upload log in the build log.
+# This slows down builds, but is nicer at time.
+# We might switch to the upload-daemon later again
+#request_build_upload
+upload_build_result
 
 autopkgtest_results
 
