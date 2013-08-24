@@ -14,13 +14,13 @@ http://archive.tanglu.org/tanglu/pool/main/t/tanglu-archive-keyring/tanglu-archi
 === 2. Create base environment ===
 Create a base cowbuilder environment (for the aequorea curent development branch) using one of the following commands:
  :: i386 builder on amd64 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --variant=buildd --debootstrapopts --arch --debootstrapopts i386 --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --debootstrapopts --variant=buildd --debootstrapopts --arch --debootstrapopts i386 --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
  :: amd64 builder on amd64 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-amd64.cow --distribution aequorea --variant=buildd --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-amd64.cow --distribution aequorea --debootstrapopts --variant=buildd --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
  :: i386 builder on i386 host:
-   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --variant=buildd --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+   cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --debootstrapopts --variant=buildd --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
 Then log into the newly created environment:
  cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-staging-*.cow
