@@ -379,6 +379,7 @@ upload_build_result() {
   for changesfile in "${WORKSPACE}/"*.changes
   do
     dput tanglu-ftpmaster $changesfile
+    [ $? -eq 0 ] || bailout 1 "Error: Package upload failed."
   done
 }
 
