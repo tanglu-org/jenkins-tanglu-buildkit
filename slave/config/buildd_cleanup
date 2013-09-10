@@ -1,0 +1,3 @@
+#!/bin/sh
+# remove workspace files older than 24 days
+find /srv/buildd/workspace -mtime +24 -exec rm -rf -- '{}' \;

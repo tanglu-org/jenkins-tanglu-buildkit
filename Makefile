@@ -24,6 +24,9 @@ install_slave: $(scripts)
 	install -m 0775 slave/upload-service/org.debian.PackageUpload.service /usr/share/dbus-1/system-services/
 	install -m 0775 slave/upload-service/org.debian.PackageUpload.conf /etc/dbus-1/system.d/
 
+	# cleanup-cronjob
+	install -m 0775 slave/config/buildd_cleanup $(DESTDIR)/etc/cron.daily/
+
 install_master: $(scripts)
 	echo "IMPORTANT! We don't really install the scripts, we just create a symlink now."
 	ln -sf $(shell readlink -f ./master/maintain-jenkins-jobs.py) $(DESTDIR)/usr/bin/maintain-jenkins-jobs
