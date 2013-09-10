@@ -79,7 +79,7 @@ build-and-push-package
     </hudson.plugins.warnings.WarningsPublisher>
 
     <com.chikli.hudson.plugin.naginator.NaginatorPublisher plugin="naginator@1.8">
-      <regexpForRerun>.*(E: Some index files failed to download).*</regexpForRerun>
+      <regexpForRerun>.*(E: Some index files failed to download).*\|.*(Error: Package upload failed.).*</regexpForRerun>
       <rerunIfUnstable>false</rerunIfUnstable>
       <checkRegexp>true</checkRegexp>
       <delay class="com.chikli.hudson.plugin.naginator.ProgressiveDelay">
