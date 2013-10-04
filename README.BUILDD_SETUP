@@ -93,7 +93,7 @@ fi
 export LD_PRELOAD
 
 === 9. Configure dput ===
-Login as buildd, create ~/.dput.cf with the following content:
+Login as buildd, add the following content to /etc/dput.cf :
 
 [tanglu-ftpmaster]
 fqdn = ftp-master.tanglu.org
