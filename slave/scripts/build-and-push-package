@@ -203,10 +203,7 @@ cowbuilder_init() {
   else
     echo "*** Updating cowbuilder cow base ***"
     sudo cowbuilder --update --basepath "${COWBUILDER_BASE}"
-    # this is not an error, the base system might be temporarily broken
-    # TODO: Fix this in a nicer way...
-    [ $? -eq 0 ] || echo "Error: Failed to update cowbuilder base ${COWBUILDER_BASE}."
-    #[ $? -eq 0 ] || bailout 1 "Error: Failed to update cowbuilder base ${COWBUILDER_BASE}."
+    [ $? -eq 0 ] || bailout 1 "Error: Failed to update cowbuilder base ${COWBUILDER_BASE}."
   fi
 
   [ -n "${pbuilderrc:-}" ] && rm -f "$pbuilderrc"
