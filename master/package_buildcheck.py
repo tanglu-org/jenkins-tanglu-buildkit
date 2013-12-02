@@ -60,6 +60,10 @@ class BuildCheck:
             # if the component is not main, add it to the list
             comp_indices = self._get_binary_indices_list(dist, comp, arch)
             archive_indices.extend(comp_indices)
+            if comp == "non-free":
+                # non-free might need contrib
+                comp_indices = self._get_binary_indices_list(dist, "contrib", arch)
+                archive_indices.extend(comp_indices)
 
         # append the corresponding sources information
         archive_source_index_path = self._archive_path + "/dists/%s/%s/source/Sources.gz" % (dist, comp)
