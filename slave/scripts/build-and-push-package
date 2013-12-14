@@ -205,6 +205,7 @@ cowbuilder_init() {
     sudo cowbuilder --update --basepath "${COWBUILDER_BASE}"
     if [ $? -ne 0 ]; then
       # second try, in case the archive had some temporary issues
+      sleep 40
       sudo cowbuilder --update --basepath "${COWBUILDER_BASE}"
       [ $? -eq 0 ] || bailout 1 "Error: Failed to update cowbuilder base ${COWBUILDER_BASE}."
     fi
