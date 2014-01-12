@@ -11,8 +11,8 @@ http://archive.tanglu.org/tanglu/pool/main/d/debootstrap/debootstrap_1.0.48tangl
 http://archive.tanglu.org/tanglu/pool/main/t/tanglu-archive-keyring/tanglu-archive-keyring_2013.02_all.deb
 (install local packages using dpkg)
 
-=== 2. Create base environment ===
-Create a base cowbuilder environment (for the aequorea curent development branch) using one of the following commands:
+=== 2. Create base environments ===
+Create cowbuilder base environments (for the aequorea curent development branch) using one of the following commands:
  :: i386 builder on amd64 host:
    cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --debootstrapopts --variant=buildd --debootstrapopts --arch --debootstrapopts i386 --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
 
@@ -21,6 +21,8 @@ Create a base cowbuilder environment (for the aequorea curent development branch
 
  :: i386 builder on i386 host:
    cowbuilder --create --basepath /var/cache/pbuilder/base-staging-i386.cow --distribution aequorea --debootstrapopts --variant=buildd --mirror http://archive.tanglu.org/tanglu --debootstrapopts "--keyring=/usr/share/keyrings/tanglu-archive-keyring.gpg"
+
+The builders must have one amd64 and one i386 environment to be able to build packages for both architectures.
 
 Then log into the newly created environment:
  cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-staging-*.cow
@@ -44,7 +46,9 @@ Login as buildd (su buildd)
 Use gpg --gen-key to create a new key. Select RSA(4) and a length of 4096 bit.
 You got the name of an element as buildd name.
 The name for the key is: "<arch> <element> Buildd", e.g. "amd64 Helium Buildd"
+If your buildd is able to perform builds for both Tanglu architectures, please omit the <arch> part.
 Set an email address in form of <arch>-<name>@buildd.tanglu.org, e.g. i386-beryllium@buildd.tanglu.org for the key.
+(For multi-arch builders, the keyname would be "Helium Buildd" here, and the email address "beryllium@buildd.tanglu.org")
 Set expiration date to 1-3 years, don't use a passphrase.
 
 The rng-tools and urandom may help if you don't have enough entropy.
@@ -79,7 +83,7 @@ Add the following lines to your pbuilderrc in /etc:
 Adjust the number behind "parallel" to number of cpus+1 to match your builder.
 
 For faster builds, configure eatmydata:
- cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-aequorea-amd64.cow
+ cowbuilder --login --save --save-after-login --basepath /var/cache/pbuilder/base-staging-*.cow
  apt-get install eatmydata
 Eatmydata should have already been installed on the host machine.
 Now add this to your /etc/pbuilderrc :
